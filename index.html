@@ -792,58 +792,68 @@
         let userId = null;
         let unsubscribeFns = [];
 
+        // Unique ID Generator (Prevents ID collision bugs)
+        let lastIdCounter = Date.now();
+        function generateId() {
+            return ++lastIdCounter;
+        }
+
         // --- State Management ---
         let inventory = [];
         let transactions = [];
         let deployments = [];
-        let categories = ['Laptops', 'Peripherals', 'Networking', 'Furniture', 'Other']; // Fallback Defaults
+        let categories = ['Laptops', 'Peripherals', 'Networking', 'Furniture', 'Other']; 
         let locations = []; 
         let currentView = 'dashboard';
 
-        // --- Firebase Data Writes (Changed to Public/Shared Path for Multi-device Sync) ---
-        async function saveItem(item) {
-            if(!userId) return;
-            await setDoc(doc(db, `artifacts/${appId}/public/data/inventory`, String(item.id)), item);
-        }
-        async function deleteItem(id) {
-            if(!userId) return;
-            await deleteDoc(doc(db, `artifacts/${appId}/public/data/inventory`, String(id)));
-        }
-        async function saveTx(tx) {
-            if(!userId) return;
-            await setDoc(doc(db, `artifacts/${appId}/public/data/transactions`, String(tx.id)), tx);
-        }
-        async function deleteTx(id) {
-            if(!userId) return;
-            await deleteDoc(doc(db, `artifacts/${appId}/public/data/transactions`, String(id)));
-        }
-        async function saveDep(dep) {
-            if(!userId) return;
-            await setDoc(doc(db, `artifacts/${appId}/public/data/deployments`, String(dep.id)), dep);
-        }
-        async function deleteDep(id) {
-            if(!userId) return;
-            await deleteDoc(doc(db, `artifacts/${appId}/public/data/deployments`, String(id)));
-        }
-        async function saveGlobals() {
-            if(!userId) return;
-            await setDoc(doc(db, `artifacts/${appId}/public/data/globals`, 'data'), { categories, locations });
+        // --- Safe Cloud Writes Wrapper ---
+        // Prevents app crash and UI bugs if Firestore denies permission
+        async function runCloudWrite(promise) {
+            if (!userId) return;
+            try {
+                await promise;
+            } catch (e) {
+                console.error("Cloud Write Error:", e);
+                if (e.code === 'permission-denied') {
+                    showToast("Cloud Error: Permission Denied. Please set your Firebase rules to 'Test Mode'.", "error");
+                }
+            }
         }
 
-        // --- Firebase Listeners (Changed to Public/Shared Path) ---
+        async function saveItem(item) {
+            await runCloudWrite(setDoc(doc(db, `artifacts/${appId}/public/data/inventory`, String(item.id)), item));
+        }
+        async function deleteItem(id) {
+            await runCloudWrite(deleteDoc(doc(db, `artifacts/${appId}/public/data/inventory`, String(id))));
+        }
+        async function saveTx(tx) {
+            await runCloudWrite(setDoc(doc(db, `artifacts/${appId}/public/data/transactions`, String(tx.id)), tx));
+        }
+        async function deleteTx(id) {
+            await runCloudWrite(deleteDoc(doc(db, `artifacts/${appId}/public/data/transactions`, String(id))));
+        }
+        async function saveDep(dep) {
+            await runCloudWrite(setDoc(doc(db, `artifacts/${appId}/public/data/deployments`, String(dep.id)), dep));
+        }
+        async function deleteDep(id) {
+            await runCloudWrite(deleteDoc(doc(db, `artifacts/${appId}/public/data/deployments`, String(id))));
+        }
+        async function saveGlobals() {
+            await runCloudWrite(setDoc(doc(db, `artifacts/${appId}/public/data/globals`, 'data'), { categories, locations }));
+        }
+
+        // --- Firebase Listeners (Shared Path) ---
         function setupListeners() {
             if (!userId) return;
             const publicPath = `artifacts/${appId}/public/data`;
 
-            // Unsubscribe existing listeners
             unsubscribeFns.forEach(fn => fn());
             unsubscribeFns = [];
 
-            // Centralized Error Handler for Permissions
             const handleDbError = (e) => {
                 console.error("Firestore Error:", e);
                 if (e.code === 'permission-denied') {
-                    showToast("Database Permission Denied. Kung gamit mo ang personal Firebase mo, i-set ang Firestore Rules sa 'Test Mode'.", "error");
+                    showToast("Database Permission Denied. Set your Firebase Rules to 'Test Mode'.", "error");
                 }
             };
 
@@ -881,7 +891,6 @@
 
         async function setupFirebase() {
             try {
-                // Use platform auth if available, else fallback to Anonymous
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -966,11 +975,9 @@
             const confirmed = await openConfirmModal(`Update category "${oldName}" to "${trimmedName}"? All items under this category will be updated.`);
             if (!confirmed) return;
 
-            // Update array
             const idx = categories.indexOf(oldName);
             if (idx !== -1) categories[idx] = trimmedName;
 
-            // Update items associated
             for (let item of inventory) {
                 if (item.category === oldName) {
                     item.category = trimmedName;
@@ -978,10 +985,8 @@
                 }
             }
 
-            // Log Transaction
-            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
             const tx = {
-                id: txId,
+                id: generateId(),
                 date: getPHDateString(),
                 type: 'EDIT_CAT',
                 itemId: null,
@@ -1017,11 +1022,9 @@
             const confirmed = await openConfirmModal(warningMsg);
             if (!confirmed) return;
 
-            // Remove category
             const idx = categories.indexOf(catName);
             if (idx !== -1) categories.splice(idx, 1);
 
-            // Reassign items to 'Other'
             if (inUseCount > 0) {
                 if (!categories.includes('Other')) categories.push('Other');
                 for (let item of inventory) {
@@ -1032,10 +1035,8 @@
                 }
             }
 
-            // Log Transaction
-            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
             const tx = {
-                id: txId,
+                id: generateId(),
                 date: getPHDateString(),
                 type: 'DEL_CAT',
                 itemId: null,
@@ -1103,11 +1104,9 @@
             const confirmed = await openConfirmModal(`Update location "${oldName}" to "${trimmedName}"? All active deployments here will be updated.`);
             if (!confirmed) return;
 
-            // Update array
             const idx = locations.indexOf(oldName);
             if (idx !== -1) locations[idx] = trimmedName;
 
-            // Update deployments associated
             for(let dep of deployments) {
                 if (dep.location === oldName) {
                     dep.location = trimmedName;
@@ -1115,10 +1114,8 @@
                 }
             }
 
-            // Log Transaction
-            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
             const tx = {
-                id: txId,
+                id: generateId(),
                 date: getPHDateString(),
                 type: 'EDIT_LOC',
                 itemId: null,
@@ -1148,14 +1145,11 @@
             const confirmed = await openConfirmModal(`Are you sure you want to delete the location "${locName}"?`);
             if (!confirmed) return;
 
-            // Remove location
             const idx = locations.indexOf(locName);
             if (idx !== -1) locations.splice(idx, 1);
 
-            // Log Transaction
-            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
             const tx = {
-                id: txId,
+                id: generateId(),
                 date: getPHDateString(),
                 type: 'DEL_LOC',
                 itemId: null,
@@ -1187,23 +1181,30 @@
             const confirmed = await openConfirmModal(warningMsg);
             if (!confirmed) return;
 
-            // Remove item
             const idx = inventory.findIndex(i => i.id === id);
             if (idx !== -1) {
                 const deletedItemCopy = { ...inventory[idx] };
                 inventory.splice(idx, 1);
                 await deleteItem(id);
                 
-                // Log Transaction
-                const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+                // Cascade delete orphaned deployments
+                const orphanedDeps = deployments.filter(d => d.itemId === id);
+                for (let dep of orphanedDeps) {
+                    const dIdx = deployments.findIndex(d => d.id === dep.id);
+                    if (dIdx > -1) deployments.splice(dIdx, 1);
+                    await deleteDep(dep.id);
+                }
+
+                // Log Transaction containing saved name to prevent UI glitches
                 const tx = {
-                    id: txId,
+                    id: generateId(),
                     date: getPHDateString(),
                     type: 'DEL_ITEM',
                     itemId: id,
+                    itemName: deletedItemCopy.name,
                     quantity: null,
                     notes: `Deleted equipment profile for "${deletedItemCopy.name}"`,
-                    meta: { deletedItem: deletedItemCopy }
+                    meta: { deletedItem: deletedItemCopy, orphanedDeps: orphanedDeps }
                 };
                 transactions.push(tx);
                 await saveTx(tx);
@@ -1286,7 +1287,6 @@
         function closePromptModal(isConfirm) {
             const inputVal = document.getElementById('prompt-input').value.trim();
             
-            // Require input if they clicked proceed/dispose
             if (isConfirm && !inputVal) {
                 showToast("Please provide a reason to proceed.", "error");
                 document.getElementById('prompt-input').focus();
@@ -1303,7 +1303,6 @@
             }, 300);
         }
 
-        // --- Helper Function for PH Timezone ---
         function getPHDateString() {
             const phTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Manila"}));
             const yyyy = phTime.getFullYear();
@@ -1314,23 +1313,19 @@
 
         // --- Initialization ---
         function init() {
-            // Set today's date as default in forms using PH timezone
             const today = getPHDateString();
             document.getElementById('inc-date').value = today;
             document.getElementById('out-date').value = today;
             document.getElementById('pull-date').value = today;
 
-            // Initialize dynamic dropdowns
             renderCategoryDropdowns();
 
-            // Setup event listeners
             document.getElementById('new-item-form').addEventListener('submit', handleAddItem);
             document.getElementById('incoming-form').addEventListener('submit', handleIncoming);
             document.getElementById('outgoing-form').addEventListener('submit', handleOutgoing);
             document.getElementById('pullout-form').addEventListener('submit', handlePullout);
-            
-            // Edit modal listeners
             document.getElementById('edit-item-form').addEventListener('submit', handleEditItem);
+            
             document.getElementById('add-category-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const input = document.getElementById('new-category-name');
@@ -1338,10 +1333,8 @@
                 if (newName && !categories.includes(newName)) {
                     categories.push(newName);
                     
-                    // Log action
-                    const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
                     const tx = {
-                        id: txId,
+                        id: generateId(),
                         date: getPHDateString(),
                         type: 'ADD_CAT',
                         itemId: null,
@@ -1370,10 +1363,8 @@
                 if (newName && !locations.includes(newName)) {
                     locations.push(newName);
                     
-                    // Log action
-                    const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
                     const tx = {
-                        id: txId,
+                        id: generateId(),
                         date: getPHDateString(),
                         type: 'ADD_LOC',
                         itemId: null,
@@ -1396,37 +1387,29 @@
                 }
             });
 
-            // Initial Render
             navigateTo('dashboard');
         }
 
-        // --- Navigation ---
         function navigateTo(viewId) {
             currentView = viewId;
             
-            // Hide all views
             document.querySelectorAll('.view-section').forEach(el => {
                 el.classList.remove('active');
             });
             
-            // Reset nav styles
             document.querySelectorAll('.nav-btn').forEach(el => {
-                // Desktop styling reset
                 if(el.id.startsWith('nav-desktop')) {
                     el.classList.remove('bg-brand-50', 'text-brand-600', 'bg-red-50', 'text-red-600');
                     el.classList.add('text-gray-600');
                 }
-                // Mobile styling reset
                 if(el.id.startsWith('nav-mobile')) {
                     el.classList.remove('text-brand-600', 'text-red-600');
                     el.classList.add('text-gray-500');
                 }
             });
 
-            // Show selected view
             document.getElementById(`view-${viewId}`).classList.add('active');
             
-            // Highlight active nav
             const activeDesktop = document.getElementById(`nav-desktop-${viewId}`);
             if(activeDesktop) {
                 activeDesktop.classList.remove('text-gray-600');
@@ -1447,7 +1430,6 @@
                 }
             }
 
-            // Render specific data based on view
             if (viewId === 'dashboard') renderDashboard();
             if (viewId === 'inventory') renderInventory();
             if (viewId === 'incoming' || viewId === 'outgoing' || viewId === 'pullout') populateItemDatalist();
@@ -1456,7 +1438,6 @@
             if (viewId === 'history') renderHistory();
         }
 
-        // --- Core Rendering Logic ---
         function renderDashboard() {
             const totalStock = inventory.reduce((sum, item) => sum + item.stock, 0);
             const lowStockCount = inventory.filter(item => item.stock < 5).length;
@@ -1468,7 +1449,6 @@
             document.getElementById('stat-disposed').innerText = disposedStock;
             document.getElementById('stat-low-stock').innerText = lowStockCount;
 
-            // Render Recent Activity (Last 6)
             const recentList = document.getElementById('dashboard-recent-list');
             recentList.innerHTML = '';
             
@@ -1492,7 +1472,6 @@
                 let typeLabel = '';
                 let rowQty = tx.quantity ? tx.quantity : '-';
                 
-                // Color formatting for dash
                 if (tx.type === 'IN') {
                     icon = '<i class="ph-fill ph-arrow-down-left text-brand-500"></i>';
                     colorClass = 'text-brand-600 bg-brand-50';
@@ -1526,9 +1505,11 @@
                 let rowTitle = '';
                 if (tx.type.includes('CAT')) {
                     rowTitle = `📁 ${tx.meta.newName || tx.meta.category || tx.meta.oldName || ''}`;
+                } else if (tx.type.includes('LOC')) {
+                    rowTitle = `📍 ${tx.meta.newName || tx.meta.location || tx.meta.oldName || ''}`;
                 } else {
                     if (tx.type === 'DEL_ITEM') rowTitle = tx.meta.deletedItem.name;
-                    else rowTitle = item ? item.name : 'Deleted Item';
+                    else rowTitle = item ? item.name : (tx.itemName ? `${tx.itemName} (Deleted)` : 'Deleted Item');
                 }
                 
                 recentList.innerHTML += `
@@ -1624,7 +1605,6 @@
             
             let optionsHTML = '';
             
-            // Sort items alphabetically
             const sortedInventory = [...inventory].sort((a,b) => a.name.localeCompare(b.name));
 
             sortedInventory.forEach(item => {
@@ -1632,7 +1612,8 @@
             });
 
             datalist.innerHTML = optionsHTML;
-            updateMaxOutgoing(); // Reset out helper text
+            updateMaxOutgoing(); 
+            updateMaxPullout();
         }
 
         function populateLocationDatalist() {
@@ -1640,8 +1621,6 @@
             if (!datalist) return;
             
             let optionsHTML = '';
-            
-            // Sort locations alphabetically
             const sortedLocations = [...locations].sort((a,b) => a.localeCompare(b));
 
             sortedLocations.forEach(loc => {
@@ -1651,7 +1630,7 @@
             datalist.innerHTML = optionsHTML;
         }
 
-        let globalCbIndex = 0; // to ensure unique checkbox classes across categories
+        let globalCbIndex = 0; 
 
         function renderDeployments() {
             const container = document.getElementById('deployments-container');
@@ -1661,7 +1640,6 @@
             
             container.innerHTML = '';
             
-            // Filter deployments before grouping
             let filteredDeployments = deployments;
             let filteredLocations = [...locations];
 
@@ -1688,7 +1666,6 @@
                 container.classList.add('hidden');
                 emptyState.classList.remove('hidden');
                 
-                // Adjust empty state message based on whether user is searching
                 if ((deployments.length > 0 || locations.length > 0) && searchTerm) {
                     emptyState.querySelector('h3').innerText = "No matching deployments found";
                     emptyState.querySelector('p').innerText = "Try adjusting your search terms.";
@@ -1702,12 +1679,10 @@
                 emptyState.classList.add('hidden');
             }
 
-            // Group deployments by Room, Box, or Other
             const rooms = {};
             const boxes = {};
             const others = {};
 
-            // Initialize all locations first
             filteredLocations.forEach(loc => {
                 const locLower = loc.toLowerCase();
                 if (locLower.includes('room')) {
@@ -1734,13 +1709,11 @@
                 }
             });
 
-            // Helper to get number from string for sorting
             function getNum(str) {
                 const match = str.match(/\d+/);
                 return match ? parseInt(match[0]) : 0;
             }
 
-            // Reusable renderer for categories
             function buildCategoryHTML(categoryTitle, catIcon, dataObj, sortType) {
                 let keys = Object.keys(dataObj);
                 if (keys.length === 0) return '';
@@ -1850,24 +1823,24 @@
             
             tbody.innerHTML = '';
             
-            // Filter logic
             let filteredTx = transactions.filter(tx => {
                 const item = inventory.find(i => i.id === tx.itemId);
                 
-                // Determine Title for search
                 let rowTitle = '';
                 if (tx.type.includes('CAT')) {
                     rowTitle = `📁 ${tx.meta.newName || tx.meta.category || tx.meta.oldName || ''}`;
                 } else if (tx.type.includes('LOC')) {
                     rowTitle = `📍 ${tx.meta.newName || tx.meta.location || tx.meta.oldName || ''}`;
                 } else {
-                    if (tx.type === 'DEL_ITEM') rowTitle = tx.meta.deletedItem.name;
-                    else rowTitle = item ? item.name : 'Deleted Item';
+                    if (tx.type === 'DEL_ITEM') {
+                        rowTitle = tx.meta.deletedItem.name;
+                    } else {
+                        rowTitle = item ? item.name : (tx.itemName ? `${tx.itemName} (Deleted)` : 'Deleted Item');
+                    }
                 }
 
                 const safeNotes = (tx.notes || '-');
 
-                // Check Type
                 let matchesType = true;
                 if (filterType !== 'All') {
                     if (filterType === 'ITEM') matchesType = tx.type.includes('ITEM');
@@ -1876,7 +1849,6 @@
                     else matchesType = tx.type === filterType;
                 }
 
-                // Check Search Term
                 let matchesSearch = true;
                 if (searchTerm) {
                     matchesSearch = rowTitle.toLowerCase().includes(searchTerm) || safeNotes.toLowerCase().includes(searchTerm);
@@ -1902,7 +1874,6 @@
                 emptyState.classList.add('hidden');
             }
 
-            // Sort newest first
             const sortedTx = [...filteredTx].sort((a, b) => {
                 const dateDiff = new Date(b.date) - new Date(a.date);
                 if (dateDiff === 0) return b.id - a.id;
@@ -1917,7 +1888,6 @@
                 let qtyPrefix = '';
                 let qtyClass = 'text-gray-800';
 
-                // Transaction Badges & Colors
                 if (tx.type === 'IN') {
                     typeBadge = `<span class="px-2 py-1 bg-brand-50 text-brand-700 border border-brand-100 rounded text-xs font-bold flex items-center gap-1 w-max"><i class="ph-bold ph-arrow-down-left"></i> IN</span>`;
                     qtyPrefix = '+'; qtyClass = 'text-brand-600';
@@ -1949,15 +1919,17 @@
                     typeBadge = `<span class="px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded text-xs font-bold flex items-center gap-1 w-max"><i class="ph-bold ph-trash"></i> DEL LOC</span>`;
                 }
 
-                // Determine Title (Item Name or Category Name)
                 let rowTitle = '';
                 if (tx.type.includes('CAT')) {
                     rowTitle = `📁 ${tx.meta.newName || tx.meta.category || tx.meta.oldName || ''}`;
                 } else if (tx.type.includes('LOC')) {
                     rowTitle = `📍 ${tx.meta.newName || tx.meta.location || tx.meta.oldName || ''}`;
                 } else {
-                    if (tx.type === 'DEL_ITEM') rowTitle = tx.meta.deletedItem.name;
-                    else rowTitle = item ? item.name : 'Deleted Item';
+                    if (tx.type === 'DEL_ITEM') {
+                        rowTitle = tx.meta.deletedItem.name;
+                    } else {
+                        rowTitle = item ? item.name : (tx.itemName ? `${tx.itemName} (Deleted)` : 'Deleted Item');
+                    }
                 }
 
                 const safeNotes = (tx.notes || '-').replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -2034,12 +2006,12 @@
                         item.stock += dep.quantity;
                         await saveItem(item);
                     }
-                    const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
                     const tx = {
-                        id: txId,
+                        id: generateId(),
                         date: getPHDateString(),
                         type: 'IN',
                         itemId: dep.itemId,
+                        itemName: item ? item.name : 'Unknown',
                         quantity: dep.quantity,
                         notes: `Returned from deployment at ${dep.location}`,
                         meta: { restoredDep: { ...dep } }
@@ -2047,12 +2019,12 @@
                     transactions.push(tx);
                     await saveTx(tx);
                 } else if (action === 'dispose') {
-                    const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
                     const tx = {
-                        id: txId,
+                        id: generateId(),
                         date: getPHDateString(),
                         type: 'DISPOSE',
                         itemId: dep.itemId,
+                        itemName: item ? item.name : 'Unknown',
                         quantity: dep.quantity,
                         notes: `Disposed from ${dep.location} - Reason: ${disposeReason}`,
                         meta: { restoredDep: { ...dep } }
@@ -2061,14 +2033,13 @@
                     await saveTx(tx);
                 }
                 
-                // Remove deployment record safely
                 deployments.splice(depIndex, 1);
                 await deleteDep(dep.id);
                 processedCount++;
             }
 
             if (processedCount > 0) {
-                renderDeployments(); // refresh the view
+                renderDeployments(); 
                 
                 if (action === 'return') {
                     showToast(`Successfully returned ${processedCount} deployment record(s) to stock.`, 'success');
@@ -2093,7 +2064,7 @@
             
             if (item.name === newName && item.category === newCategory) {
                 closeEditItemModal();
-                return; // no changes made
+                return;
             }
 
             const confirmed = await openConfirmModal(`Save changes for "${newName}"? Linked records will auto-update.`);
@@ -2106,13 +2077,12 @@
             item.category = newCategory;
             await saveItem(item);
 
-            // Log Transaction
-            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
             const tx = {
-                id: txId,
+                id: generateId(),
                 date: getPHDateString(),
                 type: 'EDIT_ITEM',
                 itemId: id,
+                itemName: newName,
                 quantity: null,
                 notes: `Edited details from "${oldName}" (${oldCategory})`,
                 meta: { oldName: oldName, oldCategory: oldCategory }
@@ -2122,7 +2092,6 @@
 
             closeEditItemModal();
             
-            // Re-render
             populateItemDatalist();
             if (currentView === 'inventory') renderInventory();
             if (currentView === 'dashboard') renderDashboard();
@@ -2143,7 +2112,7 @@
             const confirmed = await openConfirmModal(`Are you sure you want to save the new item "${name}"?`);
             if (!confirmed) return;
 
-            const newId = inventory.length > 0 ? Math.max(...inventory.map(i => i.id)) + 1 : 1;
+            const newId = generateId();
             const newItem = {
                 id: newId,
                 name: name,
@@ -2154,27 +2123,26 @@
             inventory.push(newItem);
             await saveItem(newItem);
             
-            // Log creation of profile
-            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
             const tx1 = {
-                id: txId,
+                id: generateId(),
                 date: getPHDateString(),
                 type: 'ADD_ITEM',
                 itemId: newId,
-                quantity: initialStock, // Display initial stock as info
+                itemName: name,
+                quantity: initialStock,
                 notes: `Created new item profile`,
                 meta: { itemId: newId }
             };
             transactions.push(tx1);
             await saveTx(tx1);
 
-            // Log initial stock as IN transaction if > 0 (for accurate flow history)
             if (initialStock > 0) {
                 const tx2 = {
-                    id: txId + 1,
+                    id: generateId(),
                     date: getPHDateString(),
                     type: 'IN',
                     itemId: newId,
+                    itemName: name,
                     quantity: initialStock,
                     notes: 'Initial inventory registration'
                 };
@@ -2182,12 +2150,11 @@
                 await saveTx(tx2);
             }
 
-            populateItemDatalist(); // Refresh suggestion dropdown automatically
+            populateItemDatalist();
             closeModal();
             document.getElementById('new-item-form').reset();
             showToast(`Added ${name} to inventory!`, 'success');
             
-            // Refresh current view if applicable
             if(currentView === 'inventory') renderInventory();
             if(currentView === 'dashboard') renderDashboard();
             if(currentView === 'history') renderHistory();
@@ -2205,32 +2172,30 @@
             const confirmed = await openConfirmModal(`Are you sure you want to record ${qty} incoming stock for "${itemName}"?`);
             if (!confirmed) return;
 
-            // Find if item already exists (case-insensitive)
             let item = inventory.find(i => i.name.toLowerCase() === itemName.toLowerCase());
             
             if(!item) {
-                // Auto-create new item if it doesn't exist
                 if (!categories.includes('Other')) {
                     categories.push('Other');
                     await saveGlobals();
                     renderCategoryDropdowns();
                 }
-                const newId = inventory.length > 0 ? Math.max(...inventory.map(i => i.id)) + 1 : 1;
+                const newId = generateId();
                 item = {
                     id: newId,
                     name: itemName,
-                    category: 'Other', // Default category
+                    category: 'Other',
                     stock: 0
                 };
                 inventory.push(item);
                 await saveItem(item);
                 
-                const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
                 const txCreation = {
-                    id: txId,
+                    id: generateId(),
                     date: getPHDateString(),
                     type: 'ADD_ITEM',
                     itemId: newId,
+                    itemName: itemName,
                     quantity: null,
                     notes: `Automatically created via incoming receipt`,
                     meta: { itemId: newId }
@@ -2238,21 +2203,19 @@
                 transactions.push(txCreation);
                 await saveTx(txCreation);
 
-                populateItemDatalist(); // Refresh suggestion dropdown automatically
+                populateItemDatalist(); 
                 showToast(`Automatically saved new item: ${itemName}`, 'success');
             }
 
-            // Update Stock
             item.stock += qty;
             await saveItem(item);
 
-            // Record Transaction
-            const txId2 = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
             const tx = {
-                id: txId2,
+                id: generateId(),
                 date: date,
                 type: 'IN',
                 itemId: item.id,
+                itemName: item.name,
                 quantity: qty,
                 notes: notes
             };
@@ -2260,7 +2223,7 @@
             await saveTx(tx);
 
             document.getElementById('incoming-form').reset();
-            document.getElementById('inc-date').value = getPHDateString(); // reset date to today
+            document.getElementById('inc-date').value = getPHDateString();
             
             showToast(`Successfully received ${qty}x ${item.name}`, 'success');
         }
@@ -2284,18 +2247,15 @@
                 return;
             }
 
-            // Validate Stock
             if(qty > item.stock) {
                 showToast(`Insufficient stock! Only ${item.stock} available.`, 'error');
                 return;
             }
 
-            // Update Stock
             item.stock -= qty;
             await saveItem(item);
 
-            // Save to Deployments Array
-            const newDepId = deployments.length > 0 ? Math.max(...deployments.map(d => d.id)) + 1 : 1;
+            const newDepId = generateId();
             const newDep = {
                 id: newDepId,
                 itemId: item.id,
@@ -2307,30 +2267,28 @@
             deployments.push(newDep);
             await saveDep(newDep);
 
-            // Save new location to suggestions if it doesn't exist yet
             if (!locations.includes(location)) {
                 locations.push(location);
                 await saveGlobals();
-                populateLocationDatalist(); // Refresh suggestion dropdown automatically
+                populateLocationDatalist(); 
             }
 
-            // Record Transaction
-            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
             const tx = {
-                id: txId,
+                id: generateId(),
                 date: date,
                 type: 'OUT',
                 itemId: item.id,
+                itemName: item.name,
                 quantity: qty,
                 notes: `Deployed to ${location}${notes ? ' - ' + notes : ''}`,
-                meta: { depId: newDepId } // link to deployment for undo capability
+                meta: { depId: newDepId } 
             };
             transactions.push(tx);
             await saveTx(tx);
 
             document.getElementById('outgoing-form').reset();
             document.getElementById('out-date').value = getPHDateString();
-            updateMaxOutgoing(); // refresh helper text
+            updateMaxOutgoing(); 
             
             showToast(`Successfully deployed ${qty}x ${item.name} to ${location}`, 'success');
         }
@@ -2353,23 +2311,20 @@
                 return;
             }
 
-            // Validate Stock
             if(qty > item.stock) {
                 showToast(`Insufficient stock! Only ${item.stock} available.`, 'error');
                 return;
             }
 
-            // Update Stock
             item.stock -= qty;
             await saveItem(item);
 
-            // Record Transaction as DISPOSE
-            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
             const tx = {
-                id: txId,
+                id: generateId(),
                 date: date,
                 type: 'DISPOSE',
                 itemId: item.id,
+                itemName: item.name,
                 quantity: qty,
                 notes: notes
             };
@@ -2378,7 +2333,7 @@
 
             document.getElementById('pullout-form').reset();
             document.getElementById('pull-date').value = getPHDateString();
-            updateMaxPullout(); // refresh helper text
+            updateMaxPullout(); 
             
             showToast(`Successfully pulled out and disposed ${qty}x ${item.name}`, 'success');
         }
@@ -2449,6 +2404,13 @@
             else if (tx.type === 'DEL_ITEM') {
                 inventory.push(tx.meta.deletedItem);
                 await saveItem(tx.meta.deletedItem);
+                
+                if (tx.meta.orphanedDeps) {
+                    for (let dep of tx.meta.orphanedDeps) {
+                        deployments.push(dep);
+                        await saveDep(dep);
+                    }
+                }
                 populateItemDatalist();
             }
             else if (tx.type === 'ADD_CAT') {
@@ -2521,7 +2483,6 @@
             
             showToast("Transaction successfully undone.", "success");
             
-            // Re-render everything to show the reverted state
             renderHistory();
             if (currentView === 'dashboard') renderDashboard();
             if (currentView === 'inventory') renderInventory();
@@ -2546,7 +2507,6 @@
                 helper.innerText = item.stock;
                 qtyInput.max = item.stock;
                 
-                // Optional: Change text color if stock is 0
                 helper.className = item.stock > 0 ? 'font-bold text-brand-600' : 'font-bold text-red-600';
             } else {
                 helper.innerText = '0 (Not in record)';
@@ -2608,7 +2568,6 @@
             const modal = document.getElementById('add-item-modal');
             const content = document.getElementById('modal-content');
             modal.classList.remove('hidden');
-            // Small delay for transition to trigger
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 content.classList.remove('scale-95');
@@ -2628,7 +2587,6 @@
 
         function formatDate(dateStr) {
             const options = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Manila' };
-            // Append a fixed time to avoid timezone offset shifts shifting the day backward
             return new Date(dateStr + 'T12:00:00Z').toLocaleDateString('en-US', options);
         }
 
@@ -2636,7 +2594,6 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             
-            // Define styles based on type
             const bgColor = type === 'success' ? 'bg-white' : 'bg-red-50';
             const borderColor = type === 'success' ? 'border-l-brand-500' : 'border-l-red-500';
             const icon = type === 'success' 
@@ -2651,12 +2608,10 @@
 
             container.appendChild(toast);
 
-            // Animate in
             setTimeout(() => {
                 toast.classList.remove('translate-x-full', 'opacity-0');
             }, 10);
 
-            // Animate out and remove after 3s
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-x-full');
                 setTimeout(() => {
@@ -2665,7 +2620,6 @@
             }, 3000);
         }
 
-        // Initialize App
         init();
         setupFirebase();
     </script>
