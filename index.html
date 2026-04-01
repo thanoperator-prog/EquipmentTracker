@@ -111,10 +111,10 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased flex h-screen overflow-hidden selection:bg-brand-500 selection:text-white">
+<body class="bg-gray-50 text-gray-800 font-sans antialiased flex h-screen overflow-hidden selection:bg-brand-500 selection:text-white relative">
 
     <!-- Toast Notifications Container -->
-    <div id="toast-container" class="fixed top-4 right-4 z-[110] flex flex-col gap-2 pointer-events-none"></div>
+    <div id="toast-container" class="fixed top-4 right-4 z-[300] flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- Confirmation Modal -->
     <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
@@ -313,8 +313,10 @@
             </button>
 
         </nav>
-        <div class="p-4 border-t border-gray-100 text-xs text-center text-gray-400 shrink-0">
-            Cloud Connected <i class="ph-fill ph-cloud-check text-brand-500"></i>
+        <div class="p-4 border-t border-gray-100 flex flex-col gap-2 shrink-0">
+            <div class="text-xs text-center text-gray-400 flex items-center justify-center gap-1">
+                Cloud Synced <i class="ph-fill ph-cloud-check text-brand-500"></i>
+            </div>
         </div>
     </aside>
 
@@ -327,9 +329,11 @@
                 <i class="ph-fill ph-package shrink-0 text-xl"></i>
                 <span>Equipment Tracker</span>
             </div>
-            <button onclick="document.getElementById('add-item-modal').classList.remove('hidden'); setTimeout(()=>document.getElementById('add-item-modal').classList.remove('opacity-0'),10)" class="bg-brand-50 text-brand-600 p-2 rounded-full hover:bg-brand-100 shrink-0">
-                <i class="ph ph-plus text-lg"></i>
-            </button>
+            <div class="flex items-center gap-2 shrink-0">
+                <button onclick="document.getElementById('add-item-modal').classList.remove('hidden'); setTimeout(()=>document.getElementById('add-item-modal').classList.remove('opacity-0'),10)" class="bg-brand-50 text-brand-600 p-2 rounded-full hover:bg-brand-100">
+                    <i class="ph ph-plus text-lg"></i>
+                </button>
+            </div>
         </header>
 
         <!-- Scrollable Views Container -->
@@ -743,7 +747,7 @@
     <!-- Application Logic with Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global Bindings for HTML Inline Handlers
@@ -773,7 +777,6 @@
         window.openModal = openModal;
 
         // --- Firebase Configuration & Auth ---
-        // Fallback to personal config if Canvas config is undefined
         const userFirebaseConfig = {
             apiKey: "AIzaSyD9-zyPXPImhF0UjkeSD3tYzzTiG7m68hg",
             authDomain: "equipmenttracker-448d9.firebaseapp.com",
@@ -792,7 +795,7 @@
         let userId = null;
         let unsubscribeFns = [];
 
-        // Unique ID Generator (Prevents ID collision bugs)
+        // Unique ID Generator
         let lastIdCounter = Date.now();
         function generateId() {
             return ++lastIdCounter;
@@ -807,7 +810,6 @@
         let currentView = 'dashboard';
 
         // --- Safe Cloud Writes Wrapper ---
-        // Prevents app crash and UI bugs if Firestore denies permission
         async function runCloudWrite(promise) {
             if (!userId) return;
             try {
@@ -815,37 +817,36 @@
             } catch (e) {
                 console.error("Cloud Write Error:", e);
                 if (e.code === 'permission-denied') {
-                    showToast("Cloud Error: Permission Denied. Please set your Firebase rules to 'Test Mode'.", "error");
+                    showToast("Permission Denied: Please check your Firestore Rules.", "error");
                 }
             }
         }
 
         async function saveItem(item) {
-            await runCloudWrite(setDoc(doc(db, `artifacts/${appId}/public/data/inventory`, String(item.id)), item));
+            await runCloudWrite(setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'inventory', String(item.id)), item));
         }
         async function deleteItem(id) {
-            await runCloudWrite(deleteDoc(doc(db, `artifacts/${appId}/public/data/inventory`, String(id))));
+            await runCloudWrite(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'inventory', String(id))));
         }
         async function saveTx(tx) {
-            await runCloudWrite(setDoc(doc(db, `artifacts/${appId}/public/data/transactions`, String(tx.id)), tx));
+            await runCloudWrite(setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', String(tx.id)), tx));
         }
         async function deleteTx(id) {
-            await runCloudWrite(deleteDoc(doc(db, `artifacts/${appId}/public/data/transactions`, String(id))));
+            await runCloudWrite(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', String(id))));
         }
         async function saveDep(dep) {
-            await runCloudWrite(setDoc(doc(db, `artifacts/${appId}/public/data/deployments`, String(dep.id)), dep));
+            await runCloudWrite(setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', String(dep.id)), dep));
         }
         async function deleteDep(id) {
-            await runCloudWrite(deleteDoc(doc(db, `artifacts/${appId}/public/data/deployments`, String(id))));
+            await runCloudWrite(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', String(id))));
         }
         async function saveGlobals() {
-            await runCloudWrite(setDoc(doc(db, `artifacts/${appId}/public/data/globals`, 'data'), { categories, locations }));
+            await runCloudWrite(setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'globals', 'data'), { categories, locations }));
         }
 
-        // --- Firebase Listeners (Shared Path) ---
+        // --- Firebase Listeners ---
         function setupListeners() {
             if (!userId) return;
-            const publicPath = `artifacts/${appId}/public/data`;
 
             unsubscribeFns.forEach(fn => fn());
             unsubscribeFns = [];
@@ -853,30 +854,30 @@
             const handleDbError = (e) => {
                 console.error("Firestore Error:", e);
                 if (e.code === 'permission-denied') {
-                    showToast("Database Permission Denied. Set your Firebase Rules to 'Test Mode'.", "error");
+                    showToast("Database Permission Denied. Please check your Firestore rules.", "error");
                 }
             };
 
-            unsubscribeFns.push(onSnapshot(collection(db, publicPath, 'inventory'), (snapshot) => {
+            unsubscribeFns.push(onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'inventory'), (snapshot) => {
                 inventory = snapshot.docs.map(d => d.data());
                 populateItemDatalist();
                 if(currentView === 'inventory') renderInventory();
                 if(currentView === 'dashboard') renderDashboard();
             }, handleDbError));
 
-            unsubscribeFns.push(onSnapshot(collection(db, publicPath, 'transactions'), (snapshot) => {
+            unsubscribeFns.push(onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), (snapshot) => {
                 transactions = snapshot.docs.map(d => d.data());
                 if(currentView === 'history') renderHistory();
                 if(currentView === 'dashboard') renderDashboard();
             }, handleDbError));
 
-            unsubscribeFns.push(onSnapshot(collection(db, publicPath, 'deployments'), (snapshot) => {
+            unsubscribeFns.push(onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'deployments'), (snapshot) => {
                 deployments = snapshot.docs.map(d => d.data());
                 if(currentView === 'deployments') renderDeployments();
                 if(currentView === 'dashboard') renderDashboard();
             }, handleDbError));
 
-            unsubscribeFns.push(onSnapshot(doc(db, publicPath, 'globals', 'data'), (docSnap) => {
+            unsubscribeFns.push(onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'globals', 'data'), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     categories = data.categories && data.categories.length > 0 ? data.categories : categories;
@@ -896,13 +897,14 @@
                 } else {
                     await signInAnonymously(auth);
                 }
-
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
                         setupListeners();
                     } else {
                         userId = null;
+                        unsubscribeFns.forEach(fn => fn());
+                        unsubscribeFns = [];
                     }
                 });
             } catch (e) {
@@ -2507,6 +2509,7 @@
                 helper.innerText = item.stock;
                 qtyInput.max = item.stock;
                 
+                // Optional: Change text color if stock is 0
                 helper.className = item.stock > 0 ? 'font-bold text-brand-600' : 'font-bold text-red-600';
             } else {
                 helper.innerText = '0 (Not in record)';
