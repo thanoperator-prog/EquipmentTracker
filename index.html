@@ -274,7 +274,7 @@
     <aside class="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 shadow-sm z-10">
         <div class="p-6 flex items-center gap-3 text-brand-600 font-bold text-xl border-b border-gray-100 shrink-0">
             <i class="ph-fill ph-package text-2xl"></i>
-            <span>Equipment Tracker</span>
+            <span class="truncate">Equipment Tracker</span>
         </div>
         <nav class="flex-1 py-4 flex flex-col gap-1 px-3 overflow-y-auto custom-scrollbar">
             
@@ -314,7 +314,7 @@
 
         </nav>
         <div class="p-4 border-t border-gray-100 text-xs text-center text-gray-400 shrink-0">
-            Standalone Mode Active
+            Cloud Connected <i class="ph-fill ph-cloud-check text-brand-500"></i>
         </div>
     </aside>
 
@@ -740,18 +740,167 @@
         </button>
     </nav>
 
-    <!-- Application Logic -->
-    <script>
-        // --- State Management (In-Memory) ---
-        // Empty state for actual usage
+    <!-- Application Logic with Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Bindings for HTML Inline Handlers
+        window.navigateTo = navigateTo;
+        window.renderInventory = renderInventory;
+        window.openManageCategoriesModal = openManageCategoriesModal;
+        window.updateMaxOutgoing = updateMaxOutgoing;
+        window.updateMaxPullout = updateMaxPullout;
+        window.renderDeployments = renderDeployments;
+        window.openManageLocationsModal = openManageLocationsModal;
+        window.renderHistory = renderHistory;
+        window.closeConfirmModal = closeConfirmModal;
+        window.closePromptModal = closePromptModal;
+        window.closeEditItemModal = closeEditItemModal;
+        window.closeManageCategoriesModal = closeManageCategoriesModal;
+        window.closeManageLocationsModal = closeManageLocationsModal;
+        window.closeModal = closeModal;
+        window.promptEditCategory = promptEditCategory;
+        window.promptDeleteCategory = promptDeleteCategory;
+        window.promptEditLocation = promptEditLocation;
+        window.promptDeleteLocation = promptDeleteLocation;
+        window.openEditItemModal = openEditItemModal;
+        window.promptDeleteItem = promptDeleteItem;
+        window.toggleAllCheckboxes = toggleAllCheckboxes;
+        window.processSelectedDeployments = processSelectedDeployments;
+        window.undoTransaction = undoTransaction;
+        window.openModal = openModal;
+
+        // --- Firebase Configuration & Auth ---
+        // Fallback to personal config if Canvas config is undefined
+        const userFirebaseConfig = {
+            apiKey: "AIzaSyD9-zyPXPImhF0UjkeSD3tYzzTiG7m68hg",
+            authDomain: "equipmenttracker-448d9.firebaseapp.com",
+            projectId: "equipmenttracker-448d9",
+            storageBucket: "equipmenttracker-448d9.firebasestorage.app",
+            messagingSenderId: "938659463219",
+            appId: "1:938659463219:web:163d20c7ecf3b162dee346",
+            measurementId: "G-WVCJFCJ14L"
+        };
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'equipment-tracker';
+        let userId = null;
+        let unsubscribeFns = [];
+
+        // --- State Management ---
         let inventory = [];
         let transactions = [];
         let deployments = [];
-
-        let categories = ['Laptops', 'Peripherals', 'Networking', 'Furniture', 'Other'];
-        let locations = [];
-
+        let categories = ['Laptops', 'Peripherals', 'Networking', 'Furniture', 'Other']; // Fallback Defaults
+        let locations = []; 
         let currentView = 'dashboard';
+
+        // --- Firebase Data Writes (Changed to Public/Shared Path for Multi-device Sync) ---
+        async function saveItem(item) {
+            if(!userId) return;
+            await setDoc(doc(db, `artifacts/${appId}/public/data/inventory`, String(item.id)), item);
+        }
+        async function deleteItem(id) {
+            if(!userId) return;
+            await deleteDoc(doc(db, `artifacts/${appId}/public/data/inventory`, String(id)));
+        }
+        async function saveTx(tx) {
+            if(!userId) return;
+            await setDoc(doc(db, `artifacts/${appId}/public/data/transactions`, String(tx.id)), tx);
+        }
+        async function deleteTx(id) {
+            if(!userId) return;
+            await deleteDoc(doc(db, `artifacts/${appId}/public/data/transactions`, String(id)));
+        }
+        async function saveDep(dep) {
+            if(!userId) return;
+            await setDoc(doc(db, `artifacts/${appId}/public/data/deployments`, String(dep.id)), dep);
+        }
+        async function deleteDep(id) {
+            if(!userId) return;
+            await deleteDoc(doc(db, `artifacts/${appId}/public/data/deployments`, String(id)));
+        }
+        async function saveGlobals() {
+            if(!userId) return;
+            await setDoc(doc(db, `artifacts/${appId}/public/data/globals`, 'data'), { categories, locations });
+        }
+
+        // --- Firebase Listeners (Changed to Public/Shared Path) ---
+        function setupListeners() {
+            if (!userId) return;
+            const publicPath = `artifacts/${appId}/public/data`;
+
+            // Unsubscribe existing listeners
+            unsubscribeFns.forEach(fn => fn());
+            unsubscribeFns = [];
+
+            // Centralized Error Handler for Permissions
+            const handleDbError = (e) => {
+                console.error("Firestore Error:", e);
+                if (e.code === 'permission-denied') {
+                    showToast("Database Permission Denied. Kung gamit mo ang personal Firebase mo, i-set ang Firestore Rules sa 'Test Mode'.", "error");
+                }
+            };
+
+            unsubscribeFns.push(onSnapshot(collection(db, publicPath, 'inventory'), (snapshot) => {
+                inventory = snapshot.docs.map(d => d.data());
+                populateItemDatalist();
+                if(currentView === 'inventory') renderInventory();
+                if(currentView === 'dashboard') renderDashboard();
+            }, handleDbError));
+
+            unsubscribeFns.push(onSnapshot(collection(db, publicPath, 'transactions'), (snapshot) => {
+                transactions = snapshot.docs.map(d => d.data());
+                if(currentView === 'history') renderHistory();
+                if(currentView === 'dashboard') renderDashboard();
+            }, handleDbError));
+
+            unsubscribeFns.push(onSnapshot(collection(db, publicPath, 'deployments'), (snapshot) => {
+                deployments = snapshot.docs.map(d => d.data());
+                if(currentView === 'deployments') renderDeployments();
+                if(currentView === 'dashboard') renderDashboard();
+            }, handleDbError));
+
+            unsubscribeFns.push(onSnapshot(doc(db, publicPath, 'globals', 'data'), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    categories = data.categories && data.categories.length > 0 ? data.categories : categories;
+                    locations = data.locations || [];
+                }
+                renderCategoryDropdowns();
+                if(currentView === 'inventory') renderManageCategories();
+                if(currentView === 'deployments') renderManageLocations();
+                populateLocationDatalist();
+            }, handleDbError));
+        }
+
+        async function setupFirebase() {
+            try {
+                // Use platform auth if available, else fallback to Anonymous
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        setupListeners();
+                    } else {
+                        userId = null;
+                    }
+                });
+            } catch (e) {
+                console.error("Firebase Connect Error:", e);
+                showToast("Failed to connect to cloud database.", "error");
+            }
+        }
 
         // --- Category Management Functions ---
         function renderCategoryDropdowns() {
@@ -822,20 +971,27 @@
             if (idx !== -1) categories[idx] = trimmedName;
 
             // Update items associated
-            inventory.forEach(item => {
-                if (item.category === oldName) item.category = trimmedName;
-            });
+            for (let item of inventory) {
+                if (item.category === oldName) {
+                    item.category = trimmedName;
+                    await saveItem(item);
+                }
+            }
 
             // Log Transaction
-            transactions.push({
-                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+            const tx = {
+                id: txId,
                 date: getPHDateString(),
                 type: 'EDIT_CAT',
                 itemId: null,
                 quantity: null,
                 notes: `Renamed category from "${oldName}" to "${trimmedName}"`,
                 meta: { oldName: oldName, newName: trimmedName }
-            });
+            };
+            transactions.push(tx);
+            await saveTx(tx);
+            await saveGlobals();
 
             renderCategoryDropdowns();
             renderManageCategories();
@@ -868,21 +1024,28 @@
             // Reassign items to 'Other'
             if (inUseCount > 0) {
                 if (!categories.includes('Other')) categories.push('Other');
-                inventory.forEach(item => {
-                    if (item.category === catName) item.category = 'Other';
-                });
+                for (let item of inventory) {
+                    if (item.category === catName) {
+                        item.category = 'Other';
+                        await saveItem(item);
+                    }
+                }
             }
 
             // Log Transaction
-            transactions.push({
-                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+            const tx = {
+                id: txId,
                 date: getPHDateString(),
                 type: 'DEL_CAT',
                 itemId: null,
                 quantity: null,
                 notes: `Deleted category "${catName}"`,
                 meta: { category: catName, reassignedItemIds: affectedItemIds }
-            });
+            };
+            transactions.push(tx);
+            await saveTx(tx);
+            await saveGlobals();
 
             renderCategoryDropdowns();
             renderManageCategories();
@@ -945,20 +1108,27 @@
             if (idx !== -1) locations[idx] = trimmedName;
 
             // Update deployments associated
-            deployments.forEach(dep => {
-                if (dep.location === oldName) dep.location = trimmedName;
-            });
+            for(let dep of deployments) {
+                if (dep.location === oldName) {
+                    dep.location = trimmedName;
+                    await saveDep(dep);
+                }
+            }
 
             // Log Transaction
-            transactions.push({
-                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+            const tx = {
+                id: txId,
                 date: getPHDateString(),
                 type: 'EDIT_LOC',
                 itemId: null,
                 quantity: null,
                 notes: `Renamed location from "${oldName}" to "${trimmedName}"`,
                 meta: { oldName: oldName, newName: trimmedName }
-            });
+            };
+            transactions.push(tx);
+            await saveTx(tx);
+            await saveGlobals();
 
             populateLocationDatalist();
             renderManageLocations();
@@ -983,15 +1153,19 @@
             if (idx !== -1) locations.splice(idx, 1);
 
             // Log Transaction
-            transactions.push({
-                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+            const tx = {
+                id: txId,
                 date: getPHDateString(),
                 type: 'DEL_LOC',
                 itemId: null,
                 quantity: null,
                 notes: `Deleted location "${locName}"`,
                 meta: { location: locName }
-            });
+            };
+            transactions.push(tx);
+            await saveTx(tx);
+            await saveGlobals();
 
             populateLocationDatalist();
             renderManageLocations();
@@ -1018,17 +1192,21 @@
             if (idx !== -1) {
                 const deletedItemCopy = { ...inventory[idx] };
                 inventory.splice(idx, 1);
+                await deleteItem(id);
                 
                 // Log Transaction
-                transactions.push({
-                    id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+                const tx = {
+                    id: txId,
                     date: getPHDateString(),
                     type: 'DEL_ITEM',
                     itemId: id,
                     quantity: null,
                     notes: `Deleted equipment profile for "${deletedItemCopy.name}"`,
                     meta: { deletedItem: deletedItemCopy }
-                });
+                };
+                transactions.push(tx);
+                await saveTx(tx);
             }
 
             populateItemDatalist();
@@ -1153,7 +1331,7 @@
             
             // Edit modal listeners
             document.getElementById('edit-item-form').addEventListener('submit', handleEditItem);
-            document.getElementById('add-category-form').addEventListener('submit', function(e) {
+            document.getElementById('add-category-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const input = document.getElementById('new-category-name');
                 const newName = input.value.trim();
@@ -1161,15 +1339,19 @@
                     categories.push(newName);
                     
                     // Log action
-                    transactions.push({
-                        id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                    const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+                    const tx = {
+                        id: txId,
                         date: getPHDateString(),
                         type: 'ADD_CAT',
                         itemId: null,
                         quantity: null,
                         notes: `Created new category`,
                         meta: { category: newName }
-                    });
+                    };
+                    transactions.push(tx);
+                    await saveTx(tx);
+                    await saveGlobals();
 
                     input.value = '';
                     renderCategoryDropdowns();
@@ -1181,7 +1363,7 @@
                 }
             });
 
-            document.getElementById('add-location-form').addEventListener('submit', function(e) {
+            document.getElementById('add-location-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const input = document.getElementById('new-location-name');
                 const newName = input.value.trim();
@@ -1189,15 +1371,19 @@
                     locations.push(newName);
                     
                     // Log action
-                    transactions.push({
-                        id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                    const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+                    const tx = {
+                        id: txId,
                         date: getPHDateString(),
                         type: 'ADD_LOC',
                         itemId: null,
                         quantity: null,
                         notes: `Created new deployment location`,
                         meta: { location: newName }
-                    });
+                    };
+                    transactions.push(tx);
+                    await saveTx(tx);
+                    await saveGlobals();
 
                     input.value = '';
                     populateLocationDatalist();
@@ -1836,40 +2022,50 @@
             const idsToProcess = Array.from(checkboxes).map(cb => parseInt(cb.value));
             let processedCount = 0;
 
-            idsToProcess.forEach(depId => {
+            for (const depId of idsToProcess) {
                 const depIndex = deployments.findIndex(d => d.id === depId);
-                if(depIndex === -1) return;
+                if(depIndex === -1) continue;
                 
                 const dep = deployments[depIndex];
                 const item = inventory.find(i => i.id === dep.itemId);
                 
                 if (action === 'return') {
-                    if(item) item.stock += dep.quantity;
-                    transactions.push({
-                        id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                    if(item) {
+                        item.stock += dep.quantity;
+                        await saveItem(item);
+                    }
+                    const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+                    const tx = {
+                        id: txId,
                         date: getPHDateString(),
                         type: 'IN',
                         itemId: dep.itemId,
                         quantity: dep.quantity,
                         notes: `Returned from deployment at ${dep.location}`,
                         meta: { restoredDep: { ...dep } }
-                    });
+                    };
+                    transactions.push(tx);
+                    await saveTx(tx);
                 } else if (action === 'dispose') {
-                    transactions.push({
-                        id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                    const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+                    const tx = {
+                        id: txId,
                         date: getPHDateString(),
                         type: 'DISPOSE',
                         itemId: dep.itemId,
                         quantity: dep.quantity,
                         notes: `Disposed from ${dep.location} - Reason: ${disposeReason}`,
                         meta: { restoredDep: { ...dep } }
-                    });
+                    };
+                    transactions.push(tx);
+                    await saveTx(tx);
                 }
                 
                 // Remove deployment record safely
                 deployments.splice(depIndex, 1);
+                await deleteDep(dep.id);
                 processedCount++;
-            });
+            }
 
             if (processedCount > 0) {
                 renderDeployments(); // refresh the view
@@ -1908,17 +2104,21 @@
 
             item.name = newName;
             item.category = newCategory;
+            await saveItem(item);
 
             // Log Transaction
-            transactions.push({
-                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+            const tx = {
+                id: txId,
                 date: getPHDateString(),
                 type: 'EDIT_ITEM',
                 itemId: id,
                 quantity: null,
                 notes: `Edited details from "${oldName}" (${oldCategory})`,
                 meta: { oldName: oldName, oldCategory: oldCategory }
-            });
+            };
+            transactions.push(tx);
+            await saveTx(tx);
 
             closeEditItemModal();
             
@@ -1952,28 +2152,34 @@
             };
 
             inventory.push(newItem);
+            await saveItem(newItem);
             
             // Log creation of profile
-            transactions.push({
-                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+            const tx1 = {
+                id: txId,
                 date: getPHDateString(),
                 type: 'ADD_ITEM',
                 itemId: newId,
                 quantity: initialStock, // Display initial stock as info
                 notes: `Created new item profile`,
                 meta: { itemId: newId }
-            });
+            };
+            transactions.push(tx1);
+            await saveTx(tx1);
 
             // Log initial stock as IN transaction if > 0 (for accurate flow history)
             if (initialStock > 0) {
-                transactions.push({
-                    id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                const tx2 = {
+                    id: txId + 1,
                     date: getPHDateString(),
                     type: 'IN',
                     itemId: newId,
                     quantity: initialStock,
                     notes: 'Initial inventory registration'
-                });
+                };
+                transactions.push(tx2);
+                await saveTx(tx2);
             }
 
             populateItemDatalist(); // Refresh suggestion dropdown automatically
@@ -2006,6 +2212,7 @@
                 // Auto-create new item if it doesn't exist
                 if (!categories.includes('Other')) {
                     categories.push('Other');
+                    await saveGlobals();
                     renderCategoryDropdowns();
                 }
                 const newId = inventory.length > 0 ? Math.max(...inventory.map(i => i.id)) + 1 : 1;
@@ -2016,16 +2223,20 @@
                     stock: 0
                 };
                 inventory.push(item);
+                await saveItem(item);
                 
-                transactions.push({
-                    id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+                const txCreation = {
+                    id: txId,
                     date: getPHDateString(),
                     type: 'ADD_ITEM',
                     itemId: newId,
                     quantity: null,
                     notes: `Automatically created via incoming receipt`,
                     meta: { itemId: newId }
-                });
+                };
+                transactions.push(txCreation);
+                await saveTx(txCreation);
 
                 populateItemDatalist(); // Refresh suggestion dropdown automatically
                 showToast(`Automatically saved new item: ${itemName}`, 'success');
@@ -2033,16 +2244,20 @@
 
             // Update Stock
             item.stock += qty;
+            await saveItem(item);
 
             // Record Transaction
-            transactions.push({
-                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+            const txId2 = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+            const tx = {
+                id: txId2,
                 date: date,
                 type: 'IN',
                 itemId: item.id,
                 quantity: qty,
                 notes: notes
-            });
+            };
+            transactions.push(tx);
+            await saveTx(tx);
 
             document.getElementById('incoming-form').reset();
             document.getElementById('inc-date').value = getPHDateString(); // reset date to today
@@ -2077,34 +2292,41 @@
 
             // Update Stock
             item.stock -= qty;
+            await saveItem(item);
 
             // Save to Deployments Array
             const newDepId = deployments.length > 0 ? Math.max(...deployments.map(d => d.id)) + 1 : 1;
-            deployments.push({
+            const newDep = {
                 id: newDepId,
                 itemId: item.id,
                 location: location,
                 quantity: qty,
                 date: date,
                 notes: notes
-            });
+            };
+            deployments.push(newDep);
+            await saveDep(newDep);
 
             // Save new location to suggestions if it doesn't exist yet
             if (!locations.includes(location)) {
                 locations.push(location);
+                await saveGlobals();
                 populateLocationDatalist(); // Refresh suggestion dropdown automatically
             }
 
             // Record Transaction
-            transactions.push({
-                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+            const tx = {
+                id: txId,
                 date: date,
                 type: 'OUT',
                 itemId: item.id,
                 quantity: qty,
                 notes: `Deployed to ${location}${notes ? ' - ' + notes : ''}`,
                 meta: { depId: newDepId } // link to deployment for undo capability
-            });
+            };
+            transactions.push(tx);
+            await saveTx(tx);
 
             document.getElementById('outgoing-form').reset();
             document.getElementById('out-date').value = getPHDateString();
@@ -2139,16 +2361,20 @@
 
             // Update Stock
             item.stock -= qty;
+            await saveItem(item);
 
             // Record Transaction as DISPOSE
-            transactions.push({
-                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+            const txId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+            const tx = {
+                id: txId,
                 date: date,
                 type: 'DISPOSE',
                 itemId: item.id,
                 quantity: qty,
                 notes: notes
-            });
+            };
+            transactions.push(tx);
+            await saveTx(tx);
 
             document.getElementById('pullout-form').reset();
             document.getElementById('pull-date').value = getPHDateString();
@@ -2172,77 +2398,127 @@
                     showToast("Cannot undo: Current stock is less than the received quantity.", "error");
                     return;
                 }
-                if (item) item.stock -= tx.quantity;
-                if (tx.meta && tx.meta.restoredDep) deployments.push(tx.meta.restoredDep);
+                if (item) {
+                    item.stock -= tx.quantity;
+                    await saveItem(item);
+                }
+                if (tx.meta && tx.meta.restoredDep) {
+                    deployments.push(tx.meta.restoredDep);
+                    await saveDep(tx.meta.restoredDep);
+                }
             } 
             else if (tx.type === 'OUT') {
-                if (item) item.stock += tx.quantity;
+                if (item) {
+                    item.stock += tx.quantity;
+                    await saveItem(item);
+                }
                 if (tx.meta && tx.meta.depId) {
                     const dIdx = deployments.findIndex(d => d.id === tx.meta.depId);
-                    if (dIdx > -1) deployments.splice(dIdx, 1);
+                    if (dIdx > -1) {
+                        deployments.splice(dIdx, 1);
+                        await deleteDep(tx.meta.depId);
+                    }
                 }
             } 
             else if (tx.type === 'DISPOSE') {
-                if (item) item.stock += tx.quantity;
-                if (tx.meta && tx.meta.restoredDep) deployments.push(tx.meta.restoredDep);
+                if (item) {
+                    item.stock += tx.quantity;
+                    await saveItem(item);
+                }
+                if (tx.meta && tx.meta.restoredDep) {
+                    deployments.push(tx.meta.restoredDep);
+                    await saveDep(tx.meta.restoredDep);
+                }
             }
             else if (tx.type === 'ADD_ITEM') {
                 const iIdx = inventory.findIndex(i => i.id === tx.meta.itemId);
-                if (iIdx > -1) inventory.splice(iIdx, 1);
+                if (iIdx > -1) {
+                    inventory.splice(iIdx, 1);
+                    await deleteItem(tx.meta.itemId);
+                }
                 populateItemDatalist();
             }
             else if (tx.type === 'EDIT_ITEM') {
                 if (item) {
                     item.name = tx.meta.oldName;
                     item.category = tx.meta.oldCategory;
+                    await saveItem(item);
                     populateItemDatalist();
                 }
             }
             else if (tx.type === 'DEL_ITEM') {
                 inventory.push(tx.meta.deletedItem);
+                await saveItem(tx.meta.deletedItem);
                 populateItemDatalist();
             }
             else if (tx.type === 'ADD_CAT') {
                 const cIdx = categories.indexOf(tx.meta.category);
-                if (cIdx > -1) categories.splice(cIdx, 1);
+                if (cIdx > -1) {
+                    categories.splice(cIdx, 1);
+                    await saveGlobals();
+                }
                 renderCategoryDropdowns();
             }
             else if (tx.type === 'EDIT_CAT') {
                 const cIdx = categories.indexOf(tx.meta.newName);
                 if (cIdx > -1) categories[cIdx] = tx.meta.oldName;
-                inventory.forEach(i => {
-                    if (i.category === tx.meta.newName) i.category = tx.meta.oldName;
-                });
+                for (let i of inventory) {
+                    if (i.category === tx.meta.newName) {
+                        i.category = tx.meta.oldName;
+                        await saveItem(i);
+                    }
+                }
+                await saveGlobals();
                 renderCategoryDropdowns();
             }
             else if (tx.type === 'DEL_CAT') {
-                if (!categories.includes(tx.meta.category)) categories.push(tx.meta.category);
-                tx.meta.reassignedItemIds.forEach(id => {
-                    const affectedItem = inventory.find(i => i.id === id);
-                    if (affectedItem) affectedItem.category = tx.meta.category;
-                });
+                if (!categories.includes(tx.meta.category)) {
+                    categories.push(tx.meta.category);
+                    await saveGlobals();
+                }
+                if (tx.meta.reassignedItemIds) {
+                    for(let id of tx.meta.reassignedItemIds) {
+                        const affectedItem = inventory.find(i => i.id === id);
+                        if (affectedItem) {
+                            affectedItem.category = tx.meta.category;
+                            await saveItem(affectedItem);
+                        }
+                    }
+                }
                 renderCategoryDropdowns();
             }
             else if (tx.type === 'ADD_LOC') {
                 const lIdx = locations.indexOf(tx.meta.location);
-                if (lIdx > -1) locations.splice(lIdx, 1);
+                if (lIdx > -1) {
+                    locations.splice(lIdx, 1);
+                    await saveGlobals();
+                }
                 populateLocationDatalist();
             }
             else if (tx.type === 'EDIT_LOC') {
                 const lIdx = locations.indexOf(tx.meta.newName);
                 if (lIdx > -1) locations[lIdx] = tx.meta.oldName;
-                deployments.forEach(d => {
-                    if (d.location === tx.meta.newName) d.location = tx.meta.oldName;
-                });
+                for (let d of deployments) {
+                    if (d.location === tx.meta.newName) {
+                        d.location = tx.meta.oldName;
+                        await saveDep(d);
+                    }
+                }
+                await saveGlobals();
                 populateLocationDatalist();
             }
             else if (tx.type === 'DEL_LOC') {
-                if (!locations.includes(tx.meta.location)) locations.push(tx.meta.location);
+                if (!locations.includes(tx.meta.location)) {
+                    locations.push(tx.meta.location);
+                    await saveGlobals();
+                }
                 populateLocationDatalist();
             }
 
             // Remove the transaction record
             transactions.splice(txIndex, 1);
+            await deleteTx(txId);
+            
             showToast("Transaction successfully undone.", "success");
             
             // Re-render everything to show the reverted state
@@ -2389,8 +2665,9 @@
             }, 3000);
         }
 
-        // Initialize App on load
-        window.addEventListener('DOMContentLoaded', init);
+        // Initialize App
+        init();
+        setupFirebase();
     </script>
 </body>
 </html>
