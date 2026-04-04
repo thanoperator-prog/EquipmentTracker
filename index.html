@@ -39,9 +39,9 @@
     <div id="toast-container" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[10000] flex flex-col gap-3 pointer-events-none items-center w-full px-4"></div>
 
     <!-- MODALS -->
-    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="confirm-content"><div class="p-6 text-center"><div class="w-16 h-16 rounded-full bg-amber-100 text-amber-500 mx-auto flex items-center justify-center text-4xl mb-4"><i class="ph-fill ph-warning"></i></div><h3 class="text-xl font-bold text-gray-800 mb-2">Confirmation</h3><p id="confirm-message" class="text-gray-500 text-sm mb-6">Are you sure you want to proceed?</p><div class="flex gap-3"><button onclick="window.closeConfirmModal(false)" class="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 font-bold transition-all">Cancel</button><button onclick="window.closeConfirmModal(true)" class="flex-1 px-4 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30">Proceed</button></div></div></div></div>
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="confirm-content"><div class="p-6 text-center"><div class="w-16 h-16 rounded-full bg-amber-100 text-amber-500 mx-auto flex items-center justify-center text-4xl mb-4"><i class="ph-fill ph-warning"></i></div><h3 class="text-xl font-bold text-gray-800 mb-2">Confirmation</h3><p id="confirm-message" class="text-gray-500 text-sm mb-6">Are you sure you want to proceed?</p><div class="flex gap-3"><button onclick="window.closeConfirmModal(false)" class="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 font-bold transition-all">Cancel</button><button onclick="window.closeConfirmModal(true)" class="flex-1 px-4 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30">Proceed</button></div></div></div></div>
     
-    <div id="prompt-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="prompt-content"><div class="p-6"><div class="flex items-center gap-3 mb-4"><div id="prompt-icon-container" class="w-12 h-12 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-2xl"><i id="prompt-icon" class="ph-fill ph-pencil-simple"></i></div><h3 class="text-xl font-bold text-gray-800" id="prompt-title">Prompt Title</h3></div><p id="prompt-message" class="text-gray-500 text-sm mb-4">Please provide input.</p><textarea id="prompt-input" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none resize-none mb-6"></textarea><div class="flex gap-3"><button onclick="window.closePromptModal(false)" class="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Cancel</button><button id="prompt-confirm-btn" onclick="window.closePromptModal(true)" class="flex-1 px-4 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30">Submit</button></div></div></div></div>
+    <div id="prompt-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="prompt-content"><div class="p-6"><div class="flex items-center gap-3 mb-4"><div id="prompt-icon-container" class="w-12 h-12 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-2xl"><i id="prompt-icon" class="ph-fill ph-pencil-simple"></i></div><h3 class="text-xl font-bold text-gray-800" id="prompt-title">Prompt Title</h3></div><p id="prompt-message" class="text-gray-500 text-sm mb-4">Please provide input.</p><textarea id="prompt-input" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none resize-none mb-6"></textarea><div class="flex gap-3"><button onclick="window.closePromptModal(false)" class="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Cancel</button><button id="prompt-confirm-btn" onclick="window.closePromptModal(true)" class="flex-1 px-4 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30">Submit</button></div></div></div></div>
     
     <div id="edit-item-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="edit-modal-content"><div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 class="text-lg font-bold">Edit Equipment</h3><button onclick="window.closeEditItemModal()"><i class="ph ph-x text-xl font-bold text-gray-400 hover:text-gray-700"></i></button></div><form id="edit-item-form" class="p-6" novalidate onsubmit="event.preventDefault();"><input type="hidden" id="edit-item-id"><div class="space-y-4"><div><label class="block text-sm font-bold mb-2">Equipment Name</label><input type="text" id="edit-item-name" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none"></div><div><label class="block text-sm font-bold mb-2">Category</label><select id="edit-item-category" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 bg-white"></select></div></div><div class="mt-8 flex gap-3 items-center"><button type="button" onclick="window.closeEditItemModal(); setTimeout(() => window.promptDeleteItem(document.getElementById('edit-item-id').value), 300)" class="px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl text-sm font-bold transition-all"><i class="ph-bold ph-trash mr-1"></i> Delete</button><div class="flex-1 flex gap-3 justify-end"><button type="button" onclick="window.closeEditItemModal()" class="px-5 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition-all">Cancel</button><button type="button" onclick="window.handleEditItem(event)" class="px-5 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all">Save Changes</button></div></div></form></div></div>
     
@@ -182,7 +182,7 @@
         window.confirmResolver = null; window.promptResolver = null; window.currentTransferIndex = null; window.currentProcessDepIds = [];
         window.db = null; window.auth = null;
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'equip-tracker-v1';
+        const appId = '1:938659463219:web:163d20c7ecf3b162dee346'; // Using user's custom appId parameter as fallback path
 
         // 2. HELPERS & RENDERERS
         window.generateId = () => ++window.lastIdCounter;
@@ -768,28 +768,22 @@
         // SETUP & INIT
         async function init() {
             try {
-                // Ensure default dates
-                const t = window.getPHDateString(); 
-                ['inc-date', 'out-date', 'pull-date', 'disp-date', 'rm-date', 'rd-date'].forEach(id => { const e = document.getElementById(id); if(e) e.value = t; });
-                window.renderCategoryDropdowns();
-                
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-                if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === 'dummy') {
-                    console.log("No valid Firebase config detected, continuing in local mode.");
-                    window.showToast("Local Mode (Cloud disconnected)", "warning");
-                    window.navigateTo('dashboard');
-                    return;
-                }
+                const firebaseConfig = {
+                    apiKey: "AIzaSyD9-zyPXPImhF0UjkeSD3tYzzTiG7m68hg",
+                    authDomain: "equipmenttracker-448d9.firebaseapp.com",
+                    projectId: "equipmenttracker-448d9",
+                    storageBucket: "equipmenttracker-448d9.firebasestorage.app",
+                    messagingSenderId: "938659463219",
+                    appId: "1:938659463219:web:163d20c7ecf3b162dee346",
+                    measurementId: "G-WVCJFCJ14L"
+                };
 
                 const app = initializeApp(firebaseConfig);
                 window.auth = getAuth(app);
                 window.db = getFirestore(app);
 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(window.auth, __initial_auth_token); 
-                } else { 
-                    await signInAnonymously(window.auth);
-                }
+                // Use anonymous login for external firebase setup if no token provided
+                await signInAnonymously(window.auth);
                 
                 onAuthStateChanged(window.auth, user => {
                     if(user) {
@@ -809,6 +803,11 @@
                 window.showToast("App working offline due to load error.", "warning");
                 window.navigateTo('dashboard');
             }
+            
+            // Ensure default dates
+            const t = window.getPHDateString(); 
+            ['inc-date', 'out-date', 'pull-date', 'disp-date', 'rm-date', 'rd-date'].forEach(id => { const e = document.getElementById(id); if(e) e.value = t; });
+            window.renderCategoryDropdowns();
         }
         
         // Let HTML parse fully before binding logic
