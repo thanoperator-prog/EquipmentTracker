@@ -29,7 +29,7 @@
 
     <script>
         // Fallback Stubs
-        window.stubs = ['syncAllViews', 'navigateTo', 'renderInventory', 'renderDeployments', 'renderBorrowed', 'renderMissingItems', 'renderDefectiveItems', 'renderHistory', 'openManageCategoriesModal', 'closeManageCategoriesModal', 'promptEditCategory', 'promptDeleteCategory', 'openManageLocationsModal', 'closeManageLocationsModal', 'promptEditLocation', 'promptDeleteLocation', 'updateMaxOutgoing', 'updateMaxPullout', 'updateIncCategory', 'closeConfirmModal', 'closePromptModal', 'openEditItemModal', 'closeEditItemModal', 'openModal', 'closeModal', 'openReportMissingModal', 'closeReportMissingModal', 'openResolveMissingModal', 'closeResolveMissingModal', 'openReportDefectModal', 'closeReportDefectModal', 'openResolveDefectModal', 'closeResolveDefectModal', 'toggleDefectResLocation', 'toggleResLocation', 'openBorrowModal', 'closeBorrowModal', 'openProcessDepModal', 'closeProcessDepModal', 'openPdfModal', 'closePdfModal', 'viewNote', 'closeViewNoteModal', 'promptDeleteItem', 'toggleAllCheckboxes', 'undoTransaction', 'resolveMissingItem', 'revertMissingItem', 'revertDefectiveItem', 'returnBorrowedItem', 'handleReportMissingSubmit', 'handleResolveMissingSubmit', 'handleReportDefectSubmit', 'handleResolveDefectSubmit', 'handlePdfSubmit', 'handleBorrowSubmit', 'handleProcessDepSubmit', 'handleEditItem', 'handleAddItem', 'handleIncoming', 'handleOutgoing', 'handlePullout', 'deployToExistingLocation', 'handleAddCategory', 'handleAddLocation', 'openDisposeStockModal', 'closeDisposeStockModal', 'handleDisposeStockSubmit', 'populateItemDatalist', 'populateLocationDatalist', 'renderCategoryDropdowns', 'renderDashboard', 'openConfirmModal', 'openPromptModal'];
+        window.stubs = ['syncAllViews', 'navigateTo', 'renderInventory', 'renderDeployments', 'renderBorrowed', 'renderMissingItems', 'renderDefectiveItems', 'renderHistory', 'openManageCategoriesModal', 'closeManageCategoriesModal', 'promptEditCategory', 'promptDeleteCategory', 'openManageLocationsModal', 'closeManageLocationsModal', 'promptEditLocation', 'promptDeleteLocation', 'updateMaxOutgoing', 'updateMaxPullout', 'updateIncCategory', 'closeConfirmModal', 'closePromptModal', 'openEditItemModal', 'closeEditItemModal', 'openModal', 'closeModal', 'openReportMissingModal', 'closeReportMissingModal', 'openResolveMissingModal', 'closeResolveMissingModal', 'openReportDefectModal', 'closeReportDefectModal', 'openResolveDefectModal', 'closeResolveDefectModal', 'toggleDefectResLocation', 'toggleResLocation', 'openBorrowModal', 'closeBorrowModal', 'openProcessDepModal', 'closeProcessDepModal', 'openPdfModal', 'closePdfModal', 'openTxDetails', 'closeViewNoteModal', 'promptDeleteItem', 'toggleAllCheckboxes', 'undoTransaction', 'resolveMissingItem', 'revertMissingItem', 'revertDefectiveItem', 'returnBorrowedItem', 'handleReportMissingSubmit', 'handleResolveMissingSubmit', 'handleReportDefectSubmit', 'handleResolveDefectSubmit', 'handlePdfSubmit', 'handleBorrowSubmit', 'handleProcessDepSubmit', 'handleEditItem', 'handleAddItem', 'handleIncoming', 'handleOutgoing', 'handlePullout', 'deployToExistingLocation', 'handleAddCategory', 'handleAddLocation', 'openDisposeStockModal', 'closeDisposeStockModal', 'handleDisposeStockSubmit', 'populateItemDatalist', 'populateLocationDatalist', 'renderCategoryDropdowns', 'renderDashboard', 'openConfirmModal', 'openPromptModal'];
         window.stubs.forEach(name => window[name] = function(e) { if(e && typeof e.preventDefault === 'function') e.preventDefault(); });
     </script>
 </head>
@@ -66,6 +66,8 @@
     <div id="manage-locations-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="loc-modal-content"><div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 class="text-lg font-bold">Manage Locations</h3><button onclick="window.closeManageLocationsModal()"><i class="ph ph-x text-xl font-bold text-gray-400 hover:text-gray-700"></i></button></div><div class="p-6"><form id="add-location-form" class="flex gap-2 mb-6" novalidate onsubmit="window.handleAddLocation(event); return false;"><input type="text" id="new-location-name" class="flex-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500" placeholder="New location name"><button type="submit" class="px-5 py-3 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 transition-all">Add</button></form><ul id="location-list" class="divide-y divide-gray-100 px-4 max-h-60 overflow-y-auto border border-gray-100 rounded-xl"></ul></div></div></div>
 
     <div id="pdf-options-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="pdf-options-content"><div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 class="text-lg font-bold"><i class="ph-fill ph-file-pdf text-red-500"></i> Generate PDF</h3><button onclick="window.closePdfModal()"><i class="ph ph-x text-xl font-bold text-gray-400 hover:text-gray-700"></i></button></div><form id="pdf-options-form" class="p-6" novalidate onsubmit="event.preventDefault();"><div class="space-y-3"><label class="flex items-center gap-3"><input type="checkbox" id="pdf-opt-inv" checked class="w-5 h-5 text-brand-600 rounded"><span>Available Inventory</span></label><label class="flex items-center gap-3"><input type="checkbox" id="pdf-opt-dep" checked class="w-5 h-5 text-blue-600 rounded"><span>Active Deployments</span></label><label class="flex items-center gap-3"><input type="checkbox" id="pdf-opt-bor" checked class="w-5 h-5 text-indigo-600 rounded"><span>Borrowed Items</span></label><label class="flex items-center gap-3"><input type="checkbox" id="pdf-opt-miss" checked class="w-5 h-5 text-orange-500 rounded"><span>Investigations (Missing)</span></label><label class="flex items-center gap-3"><input type="checkbox" id="pdf-opt-def" checked class="w-5 h-5 text-yellow-500 rounded"><span>Defective / Repairs</span></label><label class="flex items-center gap-3"><input type="checkbox" id="pdf-opt-disp" checked class="w-5 h-5 text-red-600 rounded"><span>Disposed Items</span></label></div><div class="mt-8 flex gap-3"><button type="button" onclick="window.closePdfModal()" class="flex-1 px-4 py-3 border rounded-xl font-bold hover:bg-gray-50 transition-all">Cancel</button><button type="button" onclick="window.handlePdfSubmit(event)" class="flex-1 px-4 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all">Download PDF</button></div></form></div></div>
+
+    <div id="view-note-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col custom-scrollbar transform scale-95 transition-transform duration-300" id="view-note-content"><div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-3xl"><h3 class="text-lg font-bold" id="view-note-title"><i class="ph-fill ph-file-text text-brand-600 mr-2"></i> Transaction Details</h3><button onclick="window.closeViewNoteModal()"><i class="ph ph-x text-xl font-bold text-gray-400 hover:text-gray-700"></i></button></div><div class="p-6 overflow-y-auto"><div id="view-note-text" class="text-sm break-words"></div><div class="mt-8 flex justify-end"><button onclick="window.closeViewNoteModal()" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all">Close</button></div></div></div></div>
 
     <!-- Sidebar Menu Panel -->
     <aside class="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-gray-200 shadow-xl z-50 shrink-0 relative">
@@ -149,7 +151,7 @@
             <section id="view-missing" class="view-section max-w-6xl mx-auto"><div class="mb-8 flex justify-between items-center"><h1 class="text-2xl font-bold">Investigations</h1><div class="flex gap-2 w-full md:w-auto"><div class="relative flex-1 md:w-64"><i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i><input type="text" id="search-missing" onkeyup="window.renderMissingItems()" placeholder="Search..." class="w-full pl-10 pr-4 py-2 border rounded-xl outline-none"></div><select id="filter-missing-status" onchange="window.renderMissingItems()" class="px-4 py-2 border rounded-xl outline-none"><option value="Missing">Missing</option><option value="Resolved">Resolved</option><option value="Lost">Perm Lost</option><option value="All">All</option></select></div></div><div class="bg-white rounded-2xl border shadow-sm overflow-x-auto"><table class="w-full text-left"><thead class="bg-gray-50/50 text-[10px] font-black uppercase text-gray-400"><tr><th class="px-6 py-4">Reported</th><th class="px-6 py-4">Equipment</th><th class="px-6 py-4">Investigation Details</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Actions</th></tr></thead><tbody id="missing-table-body" class="divide-y divide-gray-50"></tbody></table><div id="missing-empty" class="hidden py-12 text-center"><p class="text-gray-400">No missing reports.</p></div></div></section>
 
             <!-- VIEW: HISTORY -->
-            <section id="view-history" class="view-section max-w-6xl mx-auto"><div class="mb-8 flex justify-between items-center"><h1 class="text-2xl font-bold">Transaction Logs</h1><div class="flex gap-2 w-full md:w-auto"><div class="relative flex-1 md:w-64"><i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i><input type="text" id="search-history" onkeyup="window.renderHistory()" placeholder="Search..." class="w-full pl-10 pr-4 py-2 border rounded-xl outline-none"></div><select id="filter-history-type" onchange="window.renderHistory()" class="px-4 py-2 border rounded-xl outline-none"><option value="All">All Logs</option><option value="IN">Received</option><option value="OUT">Deployed</option><option value="DISPOSE">Disposed</option><option value="BORROW">Borrowed</option><option value="MISSING">Missing</option><option value="DEFECT">Defect</option><option value="TRANSFER">Transfer</option></select></div></div><div class="bg-white rounded-2xl border shadow-sm overflow-x-auto"><table class="w-full text-left"><thead class="bg-gray-50/50 text-[10px] font-black uppercase text-gray-400"><tr><th class="px-6 py-4 w-40">Date</th><th class="px-6 py-4">Type</th><th class="px-6 py-4">Details</th><th class="px-6 py-4 text-right">Action</th></tr></thead><tbody id="history-table-body" class="divide-y divide-gray-50"></tbody></table><div id="history-empty" class="hidden py-12 text-center"><p class="text-gray-400">No history yet.</p></div></div></section>
+            <section id="view-history" class="view-section max-w-6xl mx-auto"><div class="mb-8 flex justify-between items-center"><h1 class="text-2xl font-bold">Transaction Logs</h1><div class="flex gap-2 w-full md:w-auto"><div class="relative flex-1 md:w-64"><i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i><input type="text" id="search-history" onkeyup="window.renderHistory()" placeholder="Search..." class="w-full pl-10 pr-4 py-2 border rounded-xl outline-none"></div><select id="filter-history-type" onchange="window.renderHistory()" class="px-4 py-2 border rounded-xl outline-none"><option value="All">All Logs</option><option value="IN">Received</option><option value="OUT">Deployed</option><option value="DISPOSE">Disposed</option><option value="BORROW">Borrowed</option><option value="MISSING">Missing</option><option value="DEFECT">Defect</option><option value="TRANSFER">Transfer</option><option value="ITEM">Items Profile</option><option value="CATEGORY">Categories</option><option value="LOCATION">Locations</option></select></div></div><div class="bg-white rounded-2xl border shadow-sm overflow-x-auto"><table class="w-full text-left"><thead class="bg-gray-50/50 text-[10px] font-black uppercase text-gray-400"><tr><th class="px-6 py-4 w-40">Date</th><th class="px-6 py-4">Type</th><th class="px-6 py-4">Details</th><th class="px-6 py-4 text-right">Action</th></tr></thead><tbody id="history-table-body" class="divide-y divide-gray-50"></tbody></table><div id="history-empty" class="hidden py-12 text-center"><p class="text-gray-400">No history yet.</p></div></div></section>
 
         </div>
     </main>
@@ -180,12 +182,12 @@
         window.confirmResolver = null; window.promptResolver = null; window.currentTransferIndex = null; window.currentProcessDepIds = [];
         window.db = null; window.auth = null;
 
-        const appId = '1:938659463219:web:163d20c7ecf3b162dee346'; // Using user's custom appId parameter as fallback path
+        const appId = '1:938659463219:web:163d20c7ecf3b162dee346';
 
         // 2. HELPERS & RENDERERS
         window.generateId = () => ++window.lastIdCounter;
         window.getPHDateString = () => { try { const d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Manila"})); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; } catch(e){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; } }
-        window.formatDate = (d) => { if(!d) return '-'; return new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Manila' }); }
+        window.formatDate = (d) => { if(!d) return '-'; return new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit' }); }
 
         window.showToast = (m, t = 'success') => {
             const c = document.getElementById('toast-container'); if(!c) return;
@@ -249,6 +251,27 @@
         
         window.openPromptModal = (t,m) => new Promise(res => { document.getElementById('prompt-title').innerText=t; document.getElementById('prompt-message').innerText=m; document.getElementById('prompt-input').value=''; window.toggleModal('prompt-modal', 'prompt-content', true); window.promptResolver = res; });
         window.closePromptModal = r => { const val = document.getElementById('prompt-input').value.trim(); if(r && !val) return window.showToast("Input required.","error"); window.toggleModal('prompt-modal', 'prompt-content', false); if(window.promptResolver) window.promptResolver(r?val:null); window.promptResolver=null; };
+
+        window.closeViewNoteModal = () => window.toggleModal('view-note-modal', 'view-note-content', false);
+        
+        window.openTxDetails = (id) => {
+            const tx = window.transactions.find(t => String(t.id) === String(id));
+            if (!tx) return;
+            const item = window.inventory.find(x => String(x.id) === String(tx.itemId));
+            const itemName = item ? item.name : (tx.itemName || 'System/Unknown');
+            
+            let html = `<div class="space-y-3 text-sm">
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-bold text-gray-500">Transaction ID:</span> <span class="font-mono text-gray-800">TX-${tx.id}</span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-bold text-gray-500">Date:</span> <span class="text-gray-800 font-medium">${window.formatDate(tx.date)}</span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-bold text-gray-500">Type:</span> <span class="px-2 py-0.5 bg-gray-100 text-gray-700 font-bold rounded text-xs">${tx.type.replace('_', ' ')}</span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-bold text-gray-500">Item:</span> <span class="text-gray-800 font-bold">${itemName}</span></div>
+                ${tx.quantity !== null ? `<div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-bold text-gray-500">Quantity:</span> <span class="text-gray-800 font-black">${tx.quantity}</span></div>` : ''}
+                <div class="pt-2"><span class="font-bold text-gray-500 block mb-2">Details / Notes:</span> <div class="bg-gray-50 p-3 rounded-lg text-gray-700 border border-gray-100 whitespace-pre-wrap">${tx.notes || 'No additional notes provided.'}</div></div>
+            </div>`;
+            
+            document.getElementById('view-note-text').innerHTML = html;
+            window.toggleModal('view-note-modal', 'view-note-content', true);
+        };
 
         window.openModal = () => window.toggleModal('add-item-modal', 'modal-content', true);
         window.closeModal = () => window.toggleModal('add-item-modal', 'modal-content', false);
@@ -345,14 +368,87 @@
         };
         window.closeBorrowModal = () => window.toggleModal('borrow-modal', 'borrow-modal-content', false);
 
-        // EXTRA MISSING FUNCTIONS ADDED BACK IN CLEAN FORMAT
-        window.handleAddCategory = async e => { if(e) e.preventDefault(); const n = document.getElementById('new-category-name').value.trim(); if(!n) return; if(window.categories.includes(n)) return window.showToast("Exists","error"); window.categories.push(n); await window.saveGlobals(); window.renderCategoryDropdowns(); window.renderManageCategories(); document.getElementById('new-category-name').value=''; };
-        window.handleAddLocation = async e => { if(e) e.preventDefault(); const n = document.getElementById('new-location-name').value.trim(); if(!n) return; if(window.locations.includes(n)) return window.showToast("Exists","error"); window.locations.push(n); await window.saveGlobals(); window.populateLocationDatalist(); window.renderManageLocations(); document.getElementById('new-location-name').value=''; };
-        window.promptEditCategory = async o => { const n = await window.openPromptModal("Edit", `New name for ${o}`); if(!n||n===o) return; if(window.categories.includes(n)) return; const c = await window.openConfirmModal(`Update ${o} to ${n}?`); if(!c) return; window.categories[window.categories.indexOf(o)]=n; window.inventory.forEach(async i=>{if(i.category===o){i.category=n; await window.saveItem(i);}}); await window.saveGlobals(); window.renderCategoryDropdowns(); window.renderManageCategories(); window.syncAllViews(); };
-        window.promptDeleteCategory = async c => { if(c==='Other')return; const inUse = window.inventory.some(i=>i.category===c); const ok = await window.openConfirmModal(`Delete ${c}?`); if(!ok)return; window.categories.splice(window.categories.indexOf(c),1); if(inUse){if(!window.categories.includes('Other'))window.categories.push('Other'); window.inventory.forEach(async i=>{if(i.category===c){i.category='Other';await window.saveItem(i);}});} await window.saveGlobals(); window.renderCategoryDropdowns(); window.renderManageCategories(); window.syncAllViews(); };
-        window.promptEditLocation = async o => { const n = await window.openPromptModal("Edit", `New name for ${o}`); if(!n||n===o) return; if(window.locations.includes(n)) return; const c = await window.openConfirmModal(`Update ${o} to ${n}?`); if(!c) return; window.locations[window.locations.indexOf(o)]=n; window.deployments.forEach(async d=>{if(d.location===o){d.location=n; await window.saveDep(d);}}); await window.saveGlobals(); window.populateLocationDatalist(); window.renderManageLocations(); window.syncAllViews(); };
-        window.promptDeleteLocation = async l => { if(window.deployments.some(d=>d.location===l)) return window.showToast("In use.","error"); const c = await window.openConfirmModal(`Delete ${l}?`); if(!c) return; window.locations.splice(window.locations.indexOf(l),1); await window.saveGlobals(); window.populateLocationDatalist(); window.renderManageLocations(); window.syncAllViews(); };
-        window.promptDeleteItem = async id => { const i = window.inventory.find(x=>String(x.id)===String(id)); if(!i)return; const c = await window.openConfirmModal(`Permanently delete ${i.name}?`); if(!c)return; await window.deleteItem(id); window.deployments.filter(d=>String(d.itemId)===String(id)).forEach(async d=>await window.deleteDep(d.id)); window.missingItems.filter(m=>String(m.itemId)===String(id)).forEach(async m=>await window.deleteMissing(m.id)); window.defectiveItems.filter(d=>String(d.itemId)===String(id)).forEach(async d=>await window.deleteDefective(d.id)); window.closeEditItemModal(); window.showToast("Deleted","success"); window.syncAllViews(); };
+        // SYSTEM LOGGING FUNCTIONS FOR CATEGORIES & LOCATIONS
+        window.toggleResLocation = () => { const t = document.getElementById('res-dest-type'); const c = document.getElementById('res-loc-container'); if(t && c) c.className = t.value === 'deployed' ? 'block' : 'hidden'; };
+        window.toggleDefectResLocation = () => { const t = document.getElementById('resd-action-type'); const c = document.getElementById('resd-loc-container'); if(t && c) c.className = t.value === 'deployed' ? 'block' : 'hidden'; };
+
+        window.handleAddCategory = async e => { 
+            if(e) e.preventDefault(); const n = document.getElementById('new-category-name').value.trim(); if(!n) return; 
+            if(window.categories.includes(n)) return window.showToast("Category already exists.","error"); 
+            window.categories.push(n); await window.saveGlobals(); 
+            const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'ADD_CATEGORY', itemId: 'SYS', itemName: 'System Settings', quantity: null, notes: `Added new category: ${n}` };
+            window.transactions.push(tx); await window.saveTx(tx);
+            window.renderCategoryDropdowns(); window.renderManageCategories(); document.getElementById('new-category-name').value=''; 
+            window.syncAllViews();
+        };
+        
+        window.handleAddLocation = async e => { 
+            if(e) e.preventDefault(); const n = document.getElementById('new-location-name').value.trim(); if(!n) return; 
+            if(window.locations.includes(n)) return window.showToast("Location already exists.","error"); 
+            window.locations.push(n); await window.saveGlobals(); 
+            const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'ADD_LOCATION', itemId: 'SYS', itemName: 'System Settings', quantity: null, notes: `Added new location: ${n}` };
+            window.transactions.push(tx); await window.saveTx(tx);
+            window.populateLocationDatalist(); window.renderManageLocations(); document.getElementById('new-location-name').value=''; 
+            window.syncAllViews();
+        };
+        
+        window.promptEditCategory = async o => { 
+            const n = await window.openPromptModal("Edit Category", `Enter new name for ${o}`); if(!n||n===o) return; 
+            if(window.categories.includes(n)) return window.showToast("Name already in use.","error"); 
+            const c = await window.openConfirmModal(`Update category from "${o}" to "${n}"?`); if(!c) return; 
+            window.categories[window.categories.indexOf(o)]=n; 
+            window.inventory.forEach(async i=>{if(i.category===o){i.category=n; await window.saveItem(i);}}); 
+            await window.saveGlobals(); 
+            const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'EDIT_CATEGORY', itemId: 'SYS', itemName: 'System Settings', quantity: null, notes: `Renamed category from ${o} to ${n}` };
+            window.transactions.push(tx); await window.saveTx(tx);
+            window.renderCategoryDropdowns(); window.renderManageCategories(); window.syncAllViews(); 
+        };
+        
+        window.promptDeleteCategory = async c => { 
+            if(c==='Other')return window.showToast("Cannot delete default category.", "error"); 
+            const inUse = window.inventory.some(i=>i.category===c); 
+            const ok = await window.openConfirmModal(`Permanently delete category "${c}"?`); if(!ok)return; 
+            window.categories.splice(window.categories.indexOf(c),1); 
+            if(inUse){if(!window.categories.includes('Other'))window.categories.push('Other'); window.inventory.forEach(async i=>{if(i.category===c){i.category='Other';await window.saveItem(i);}});} 
+            await window.saveGlobals(); 
+            const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'DELETE_CATEGORY', itemId: 'SYS', itemName: 'System Settings', quantity: null, notes: `Deleted category: ${c}` };
+            window.transactions.push(tx); await window.saveTx(tx);
+            window.renderCategoryDropdowns(); window.renderManageCategories(); window.syncAllViews(); 
+        };
+        
+        window.promptEditLocation = async o => { 
+            const n = await window.openPromptModal("Edit Location", `Enter new name for ${o}`); if(!n||n===o) return; 
+            if(window.locations.includes(n)) return window.showToast("Location name already in use.", "error"); 
+            const c = await window.openConfirmModal(`Update location from "${o}" to "${n}"?`); if(!c) return; 
+            window.locations[window.locations.indexOf(o)]=n; 
+            window.deployments.forEach(async d=>{if(d.location===o){d.location=n; await window.saveDep(d);}}); 
+            await window.saveGlobals(); 
+            const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'EDIT_LOCATION', itemId: 'SYS', itemName: 'System Settings', quantity: null, notes: `Renamed location from ${o} to ${n}` };
+            window.transactions.push(tx); await window.saveTx(tx);
+            window.populateLocationDatalist(); window.renderManageLocations(); window.syncAllViews(); 
+        };
+        
+        window.promptDeleteLocation = async l => { 
+            if(window.deployments.some(d=>d.location===l)) return window.showToast("Cannot delete. Location is currently in use.","error"); 
+            const c = await window.openConfirmModal(`Permanently delete location "${l}"?`); if(!c) return; 
+            window.locations.splice(window.locations.indexOf(l),1); 
+            await window.saveGlobals(); 
+            const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'DELETE_LOCATION', itemId: 'SYS', itemName: 'System Settings', quantity: null, notes: `Deleted location: ${l}` };
+            window.transactions.push(tx); await window.saveTx(tx);
+            window.populateLocationDatalist(); window.renderManageLocations(); window.syncAllViews(); 
+        };
+        
+        window.promptDeleteItem = async id => { 
+            const i = window.inventory.find(x=>String(x.id)===String(id)); if(!i)return; 
+            const c = await window.openConfirmModal(`Permanently delete equipment "${i.name}" and all related data?`); if(!c)return; 
+            await window.deleteItem(id); 
+            window.deployments.filter(d=>String(d.itemId)===String(id)).forEach(async d=>await window.deleteDep(d.id)); 
+            window.missingItems.filter(m=>String(m.itemId)===String(id)).forEach(async m=>await window.deleteMissing(m.id)); 
+            window.defectiveItems.filter(d=>String(d.itemId)===String(id)).forEach(async d=>await window.deleteDefective(d.id)); 
+            const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'DELETE_ITEM', itemId: id, itemName: i.name, quantity: i.stock, notes: `Permanently deleted equipment profile and all associated records.` };
+            window.transactions.push(tx); await window.saveTx(tx);
+            window.closeEditItemModal(); window.showToast("Item deleted.","success"); window.syncAllViews(); 
+        };
 
         // RENDER UI FUNCTIONS
         window.renderManageCategories = () => { document.getElementById('category-list').innerHTML = window.categories.map(c => `<li class="py-3 flex justify-between items-center"><span class="font-bold">${c}</span><div class="flex gap-2"><button type="button" onclick="window.promptEditCategory('${c}')" class="text-brand-600 text-xs font-bold cursor-pointer relative z-10 pointer-events-auto">Edit</button><button type="button" onclick="window.promptDeleteCategory('${c}')" class="text-red-600 text-xs font-bold cursor-pointer relative z-10 pointer-events-auto">Delete</button></div></li>`).join(''); };
@@ -362,9 +458,13 @@
             const list = document.getElementById('deployments-container'); const el = document.getElementById('search-deployments');
             const search = el ? el.value.toLowerCase() : '';
             let depMap = {}; 
+            window.locations.forEach(l => { if(l.toLowerCase().includes(search) || search === '') depMap[l] = []; });
             window.deployments.forEach(d => { 
                 const item = window.inventory.find(i=>String(i.id)===String(d.itemId)); const n = item ? String(item.name).toLowerCase() : ''; 
-                if(d.location.toLowerCase().includes(search) || n.includes(search)){ if(!depMap[d.location]) depMap[d.location] = []; depMap[d.location].push(d); } 
+                if(d.location.toLowerCase().includes(search) || n.includes(search)){ 
+                    if(!depMap[d.location]) depMap[d.location] = []; 
+                    if(!depMap[d.location].includes(d)) depMap[d.location].push(d); 
+                } 
             });
             if(Object.keys(depMap).length === 0){ list.innerHTML = ''; document.getElementById('deployments-empty').classList.remove('hidden'); return; }
             document.getElementById('deployments-empty').classList.add('hidden');
@@ -385,6 +485,7 @@
                         </td>
                     </tr>`; 
                 }).join('');
+                if(trs === '') trs = `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400 italic text-xs">No equipment deployed here yet.</td></tr>`;
                 html += `<div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-4 overflow-hidden">
                     <div class="px-6 py-4 bg-brand-50/20 font-black text-brand-900 border-b border-gray-100 flex justify-between items-center">
                         <span>${safeLoc}</span>
@@ -468,7 +569,15 @@
             const filtered = window.transactions.filter(t => { const i = window.inventory.find(x=>String(x.id)===String(t.itemId)); const n = i?String(i.name).toLowerCase():(t.itemName||'').toLowerCase(); return (n.includes(search) || (t.notes||'').toLowerCase().includes(search)) && (typeFilter==='All'||t.type===typeFilter||t.type.includes(typeFilter)); });
             if(filtered.length===0){ tb.innerHTML=''; document.getElementById('history-empty').classList.remove('hidden'); return;}
             document.getElementById('history-empty').classList.add('hidden');
-            tb.innerHTML = [...filtered].sort((a,b) => { let d = new Date(b.date) - new Date(a.date); return d === 0 ? b.id - a.id : d; }).map(t => { const i = window.inventory.find(x=>String(x.id)===String(t.itemId)); return `<tr><td class="px-6 py-4 text-xs">${window.formatDate(t.date)}</td><td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 font-bold text-[10px] rounded">${t.type}</span></td><td class="px-6 py-4 font-bold">${i?i.name:t.itemName} <span class="text-xs text-gray-400 block truncate max-w-[250px]">${t.notes||''}</span></td><td class="px-6 py-4 text-right"><button type="button" onclick="window.undoTransaction('${t.id}')" class="text-[10px] font-bold text-gray-500 hover:text-red-500 uppercase cursor-pointer relative z-10 pointer-events-auto">Undo</button></td></tr>`; }).join('');
+            tb.innerHTML = [...filtered].sort((a,b) => { let d = new Date(b.date) - new Date(a.date); return d === 0 ? b.id - a.id : d; }).map(t => { 
+                const i = window.inventory.find(x=>String(x.id)===String(t.itemId)); 
+                return `<tr class="border-b border-gray-50 hover:bg-gray-50 cursor-pointer" onclick="window.openTxDetails('${t.id}')">
+                    <td class="px-6 py-4 text-xs border-b border-gray-50">${window.formatDate(t.date)}</td>
+                    <td class="px-6 py-4 border-b border-gray-50"><span class="px-2 py-1 bg-gray-100 font-bold text-[10px] rounded">${t.type.replace('_', ' ')}</span></td>
+                    <td class="px-6 py-4 font-bold border-b border-gray-50">${i?i.name:t.itemName} <span class="text-xs text-gray-400 block truncate max-w-[250px]">${t.notes||''}</span></td>
+                    <td class="px-6 py-4 text-right border-b border-gray-50" onclick="event.stopPropagation();"><button type="button" onclick="window.undoTransaction('${t.id}')" class="text-[10px] font-bold text-gray-500 hover:text-red-500 uppercase cursor-pointer relative z-10 pointer-events-auto">Undo</button></td>
+                </tr>`; 
+            }).join('');
         };
 
         window.renderInventory = () => {
@@ -514,15 +623,24 @@
 
             const list = document.getElementById('dashboard-recent-list');
             if(!list) return;
-            list.innerHTML = [...window.transactions].sort((a,b) => { let d = new Date(b.date) - new Date(a.date); return d === 0 ? b.id - a.id : d; }).slice(0, 8).map(tx => `
-                <li class="px-6 py-4 flex justify-between items-center group hover:bg-gray-50/50 transition-colors">
+            
+            list.innerHTML = [...window.transactions].sort((a,b) => { let d = new Date(b.date) - new Date(a.date); return d === 0 ? b.id - a.id : d; }).slice(0, 8).map(tx => {
+                const isNeutral = ['EDIT_ITEM', 'DELETE_ITEM', 'ADD_CATEGORY', 'EDIT_CATEGORY', 'DELETE_CATEGORY', 'ADD_LOCATION', 'EDIT_LOCATION', 'DELETE_LOCATION'].includes(tx.type);
+                const isPositive = ['IN', 'TRANSFER', 'ADD_ITEM', 'FOUND', 'RETURN_BORROW', 'REPAIRED'].includes(tx.type);
+                const badgeColor = isNeutral ? 'bg-gray-400' : (isPositive ? 'bg-brand-500' : 'bg-red-500');
+                const textColor = isNeutral ? 'text-gray-500' : (isPositive ? 'text-brand-600' : 'text-red-500');
+                const icon = isNeutral ? 'ph-gear' : (tx.type==='TRANSFER'?'ph-arrows-left-right':(isPositive ? 'ph-arrow-down-left' : 'ph-arrow-up-right'));
+                const qtyDisplay = tx.quantity ? (isPositive ? '+' : '-') + tx.quantity : '';
+                return `
+                <li class="px-6 py-4 flex justify-between items-center group hover:bg-gray-50/50 transition-colors cursor-pointer" onclick="window.openTxDetails('${tx.id}')">
                     <div class="flex items-center gap-4">
-                        <div class="w-2 h-2 rounded-full ${tx.type==='IN'?'bg-brand-500':(tx.type==='TRANSFER'?'bg-blue-500':'bg-red-400')} text-white flex items-center justify-center"><i class="ph-bold ${tx.type==='IN'?'ph-arrow-down-left':(tx.type==='TRANSFER'?'ph-arrows-left-right':'ph-arrow-up-right')} text-[10px]"></i></div>
-                        <div class="leading-tight"><p class="font-bold text-gray-800">${tx.itemName || 'System'}</p><p class="text-[10px] text-gray-400 uppercase font-black">${tx.type} • ${window.formatDate(tx.date)}</p></div>
+                        <div class="w-8 h-8 rounded-full ${badgeColor} text-white flex items-center justify-center shrink-0"><i class="ph-bold ${icon} text-sm"></i></div>
+                        <div class="leading-tight"><p class="font-bold text-gray-800">${tx.itemName || 'System'}</p><p class="text-[10px] text-gray-400 uppercase font-black">${tx.type.replace('_', ' ')} • ${window.formatDate(tx.date)}</p></div>
                     </div>
-                    <p class="font-black text-lg ${tx.type==='IN'?'text-brand-600':(tx.type==='TRANSFER'?'text-blue-600':'text-red-500')}">${tx.type==='IN'||tx.type==='TRANSFER'?'+':'-'}${tx.quantity||0}</p>
+                    <p class="font-black text-lg ${textColor}">${qtyDisplay}</p>
                 </li>
-            `).join('') || '<p class="p-10 text-center text-gray-400 text-xs font-bold italic">No transactions on record.</p>';
+                `;
+            }).join('') || '<p class="p-10 text-center text-gray-400 text-xs font-bold italic">No transactions on record.</p>';
         };
 
         window.navigateTo = (v) => {
@@ -559,7 +677,8 @@
                     await window.saveTx({ id: window.generateId(), date: window.getPHDateString(), type: 'ADD_ITEM', itemId: newId, itemName: n, quantity: null, notes: "Auto-profile created." });
                 }
                 item.stock = (Number(item.stock) || 0) + q; await window.saveItem(item);
-                await window.saveTx({ id: window.generateId(), date: d, type: 'IN', itemId: item.id, itemName: item.name, quantity: q, notes: notes });
+                const tx = { id: window.generateId(), date: d, type: 'IN', itemId: item.id, itemName: item.name, quantity: q, notes: notes };
+                window.transactions.push(tx); await window.saveTx(tx);
                 document.getElementById('incoming-form').reset(); document.getElementById('inc-date').value = window.getPHDateString();
                 window.showToast(`Successfully received ${q}x ${item.name}`, 'success'); window.syncAllViews();
             } catch(error) { console.error(error); window.showToast("Error processing request.", "error"); }
@@ -577,7 +696,8 @@
                 const newDep = { id: window.generateId(), itemId: item.id, location: l, quantity: q, date: d, notes: notes };
                 window.deployments.push(newDep); await window.saveDep(newDep);
                 if(window.locations && !window.locations.includes(l)) { window.locations.push(l); await window.saveGlobals(); window.populateLocationDatalist(); }
-                await window.saveTx({ id: window.generateId(), date: d, type: 'OUT', itemId: item.id, itemName: item.name, quantity: q, notes: `Deployed to ${l}. ${notes}` });
+                const tx = { id: window.generateId(), date: d, type: 'OUT', itemId: item.id, itemName: item.name, quantity: q, notes: `Deployed to ${l}. ${notes}` };
+                window.transactions.push(tx); await window.saveTx(tx);
                 document.getElementById('outgoing-form').reset(); document.getElementById('out-date').value = window.getPHDateString();
                 window.updateMaxOutgoing(); window.showToast(`Successfully deployed to ${l}`, 'success'); window.syncAllViews();
             } catch(error) { console.error(error); window.showToast("Error processing request.", "error"); }
@@ -592,7 +712,8 @@
                 if(!item) return window.showToast("Item not found.", "error"); if(q > (Number(item.stock)||0)) return window.showToast(`Insufficient stock (${item.stock} left).`, "error");
                 const confirm = await window.openConfirmModal(`PERMANENTLY DISPOSE ${q}x "${n}"?`); if(!confirm) return;
                 item.stock = (Number(item.stock)||0) - q; await window.saveItem(item);
-                await window.saveTx({ id: window.generateId(), date: d, type: 'DISPOSE', itemId: item.id, itemName: item.name, quantity: q, notes: notes });
+                const tx = { id: window.generateId(), date: d, type: 'DISPOSE', itemId: item.id, itemName: item.name, quantity: q, notes: notes };
+                window.transactions.push(tx); await window.saveTx(tx);
                 document.getElementById('pullout-form').reset(); document.getElementById('pull-date').value = window.getPHDateString();
                 window.updateMaxPullout(); window.showToast(`Disposed ${q}x ${item.name}`, 'success'); window.syncAllViews();
             } catch(error) { console.error(error); window.showToast("Error processing request.", "error"); }
@@ -607,7 +728,9 @@
                 if(!item || q > (Number(item.stock)||0)) return window.showToast("Invalid stock deduction.", "error");
                 const confirm = await window.openConfirmModal(`Dispose ${q}x "${item.name}" from active stock?`); if(!confirm) return;
                 item.stock = (Number(item.stock)||0) - q; await window.saveItem(item);
-                await window.saveTx({ id: window.generateId(), date: d, type: 'DISPOSE', itemId: item.id, itemName: item.name, quantity: q, notes: notes });
+                const tx = { id: window.generateId(), date: d, type: 'DISPOSE', itemId: item.id, itemName: item.name, quantity: q, notes: notes };
+                window.transactions.push(tx); await window.saveTx(tx);
+                document.getElementById('dispose-stock-form').reset(); document.getElementById('disp-date').value = window.getPHDateString();
                 window.closeDisposeStockModal(); window.showToast(`Disposed ${q}x ${item.name}`, 'success'); window.syncAllViews();
             } catch(error) { console.error("Dispose Partial Error:", error); window.showToast("Error processing request.", "error"); }
         };
@@ -620,9 +743,14 @@
                 const confirm = await window.openConfirmModal(`Create profile for "${n}"?`); if(!confirm) return;
                 const nid = window.generateId(); const item = { id: nid, name: n, category: c, stock: q };
                 window.inventory.push(item); await window.saveItem(item);
-                await window.saveTx({ id: window.generateId(), date: window.getPHDateString(), type: 'ADD_ITEM', itemId: nid, itemName: n, quantity: q, notes: "Profile created." });
-                if(q > 0) { await window.saveTx({ id: window.generateId(), date: window.getPHDateString(), type: 'IN', itemId: nid, itemName: n, quantity: q, notes: "Initial stock." }); }
-                window.closeModal(); document.getElementById('new-item-form').reset(); window.showToast("Profile created.", "success"); window.syncAllViews();
+                const tx1 = { id: window.generateId(), date: window.getPHDateString(), type: 'ADD_ITEM', itemId: nid, itemName: n, quantity: q, notes: "Profile created." };
+                window.transactions.push(tx1); await window.saveTx(tx1);
+                if(q > 0) { 
+                    const tx2 = { id: window.generateId(), date: window.getPHDateString(), type: 'IN', itemId: nid, itemName: n, quantity: q, notes: "Initial stock." }; 
+                    window.transactions.push(tx2); await window.saveTx(tx2); 
+                }
+                document.getElementById('new-item-form').reset();
+                window.closeModal(); window.showToast("Profile created.", "success"); window.syncAllViews();
             } catch(error) { console.error("Add Item Error:", error); window.showToast("Error processing request.", "error"); }
         };
 
@@ -633,7 +761,9 @@
                 if(!n || !c) return window.showToast("Fill all fields.", "error"); const item = window.inventory.find(i => String(i.id) === String(id)); if(!item || (item.name===n && item.category===c)) return window.closeEditItemModal();
                 const confirm = await window.openConfirmModal(`Save changes for "${n}"?`); if(!confirm) return;
                 const oN = item.name; item.name = n; item.category = c; await window.saveItem(item);
-                await window.saveTx({ id: window.generateId(), date: window.getPHDateString(), type: 'EDIT_ITEM', itemId: item.id, itemName: n, quantity: null, notes: `Renamed from ${oN}`, meta: { oldName: oN } });
+                const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'EDIT_ITEM', itemId: item.id, itemName: n, quantity: null, notes: `Renamed from ${oN}` };
+                window.transactions.push(tx); await window.saveTx(tx);
+                document.getElementById('edit-item-form').reset();
                 window.closeEditItemModal(); window.showToast("Saved updates.", "success"); window.syncAllViews();
             } catch(error) { console.error("Edit Item Error:", error); window.showToast("Error processing request.", "error"); }
         };
@@ -649,7 +779,9 @@
                 if(stype === 'stock') { if(q > (Number(item.stock)||0)) return window.showToast("Stock error", "error"); item.stock = (Number(item.stock)||0) - q; await window.saveItem(item); } 
                 else { const dep = window.deployments.find(dp => String(dp.id) === String(sid)); if(!dep || q > (Number(dep.quantity)||0)) return window.showToast("Dep error", "error"); locStr = dep.location; dep.quantity = (Number(dep.quantity)||0) - q; if(dep.quantity <= 0) { window.deployments = window.deployments.filter(dp=>String(dp.id)!==String(sid)); await window.deleteDep(dep.id); } else { await window.saveDep(dep); } }
                 const miss = { id: window.generateId(), itemId: item.id, quantity: q, dateReported: d, notes: notes, status: 'Missing', source: stype, location: locStr }; window.missingItems.push(miss); await window.saveMissing(miss);
-                await window.saveTx({ id: window.generateId(), date: d, type: 'MISSING', itemId: item.id, itemName: item.name, quantity: q, notes: `[From: ${locStr}] ${notes}` });
+                const tx = { id: window.generateId(), date: d, type: 'MISSING', itemId: item.id, itemName: item.name, quantity: q, notes: `[From: ${locStr}] ${notes}` };
+                window.transactions.push(tx); await window.saveTx(tx);
+                document.getElementById('rm-form').reset(); document.getElementById('rm-date').value = window.getPHDateString();
                 window.closeReportMissingModal(); window.showToast("Report logged.", "success"); window.syncAllViews();
             } catch(error) { console.error("Report Missing Error:", error); window.showToast("Error processing request.", "error"); }
         };
@@ -666,7 +798,9 @@
                 if (destType === 'stock') { if (item) { item.stock = (Number(item.stock) || 0) + m.quantity; await window.saveItem(item); } } 
                 else { resolvedLocStr = destLoc; let dep = window.deployments.find(d => String(d.itemId) === String(m.itemId) && d.location === destLoc); if (dep) { dep.quantity = (Number(dep.quantity) || 0) + m.quantity; await window.saveDep(dep); } else { const newDep = { id: window.generateId(), itemId: m.itemId, location: destLoc, quantity: m.quantity, date: window.getPHDateString(), notes: "Found and reassigned" }; window.deployments.push(newDep); await window.saveDep(newDep); } if (!window.locations.includes(destLoc)) { window.locations.push(destLoc); await window.saveGlobals(); window.populateLocationDatalist(); } }
                 m.status = 'Resolved'; m.resolvedLocation = resolvedLocStr; await window.saveMissing(m);
-                await window.saveTx({ id: window.generateId(), date: window.getPHDateString(), type: 'FOUND', itemId: m.itemId, itemName: itemName, quantity: m.quantity, notes: `Found missing equipment. Relocated to ${resolvedLocStr === 'stock' ? 'Stock' : destLoc}. Notes: ${notes}` });
+                const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'FOUND', itemId: m.itemId, itemName: itemName, quantity: m.quantity, notes: `Found missing equipment. Relocated to ${resolvedLocStr === 'stock' ? 'Stock' : destLoc}. Notes: ${notes}` };
+                window.transactions.push(tx); await window.saveTx(tx);
+                document.getElementById('resolve-missing-form').reset(); window.toggleResLocation();
                 window.closeResolveMissingModal(); window.showToast(`Found and relocated.`, 'success'); window.syncAllViews();
             } catch(error) { console.error("Resolve Missing Error:", error); window.showToast("Error processing request.", "error"); }
         };
@@ -682,7 +816,9 @@
                 if(stype === 'stock') { if(q > (Number(item.stock)||0)) return window.showToast("Stock error", "error"); item.stock = (Number(item.stock)||0) - q; await window.saveItem(item); } 
                 else { const dep = window.deployments.find(dp => String(dp.id) === String(sid)); if(!dep || q > (Number(dep.quantity)||0)) return window.showToast("Dep error", "error"); locStr = dep.location; dep.quantity = (Number(dep.quantity)||0) - q; if(dep.quantity <= 0) { window.deployments = window.deployments.filter(dp=>String(dp.id)!==String(sid)); await window.deleteDep(dep.id); } else { await window.saveDep(dep); } }
                 const def = { id: window.generateId(), itemId: item.id, quantity: q, dateReported: d, notes: notes, status: 'Defective', source: stype, location: locStr }; window.defectiveItems.push(def); await window.saveDefective(def);
-                await window.saveTx({ id: window.generateId(), date: d, type: 'DEFECT', itemId: item.id, itemName: item.name, quantity: q, notes: `[From: ${locStr}] Defective: ${notes}` });
+                const tx = { id: window.generateId(), date: d, type: 'DEFECT', itemId: item.id, itemName: item.name, quantity: q, notes: `[From: ${locStr}] Defective: ${notes}` };
+                window.transactions.push(tx); await window.saveTx(tx);
+                document.getElementById('rd-form').reset(); document.getElementById('rd-date').value = window.getPHDateString();
                 window.closeReportDefectModal(); window.showToast("Defect report logged.", "success"); window.syncAllViews();
             } catch(error) { console.error("Report Defect Error:", error); window.showToast("Error processing request.", "error"); }
         };
@@ -698,8 +834,9 @@
                 let resolvedLocStr = 'stock';
                 if (actionType === 'stock') { if (item) { item.stock = (Number(item.stock) || 0) + d.quantity; await window.saveItem(item); } } 
                 else if (actionType === 'deployed') { resolvedLocStr = destLoc; let dep = window.deployments.find(dp => String(dp.itemId) === String(d.itemId) && dp.location === destLoc); if (dep) { dep.quantity = (Number(dep.quantity) || 0) + d.quantity; await window.saveDep(dep); } else { const newDep = { id: window.generateId(), itemId: d.itemId, location: destLoc, quantity: d.quantity, date: window.getPHDateString(), notes: "Repaired and assigned" }; window.deployments.push(newDep); await window.saveDep(newDep); } if (!window.locations.includes(destLoc)) { window.locations.push(destLoc); await window.saveGlobals(); window.populateLocationDatalist(); } }
-                if (actionType === 'dispose') { d.status = 'Disposed'; await window.saveDefective(d); await window.saveTx({ id: window.generateId(), date: window.getPHDateString(), type: 'DISPOSE', itemId: d.itemId, itemName: itemName, quantity: d.quantity, notes: `Disposed unrepairable equipment. Notes: ${notes}` }); } 
-                else { d.status = 'Repaired'; d.resolvedLocation = resolvedLocStr; await window.saveDefective(d); await window.saveTx({ id: window.generateId(), date: window.getPHDateString(), type: 'REPAIRED', itemId: d.itemId, itemName: itemName, quantity: d.quantity, notes: `Item repaired and returned to ${resolvedLocStr === 'stock' ? 'Stock' : destLoc}. Notes: ${notes}` }); }
+                if (actionType === 'dispose') { d.status = 'Disposed'; await window.saveDefective(d); const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'DISPOSE', itemId: d.itemId, itemName: itemName, quantity: d.quantity, notes: `Disposed unrepairable equipment. Notes: ${notes}` }; window.transactions.push(tx); await window.saveTx(tx); } 
+                else { d.status = 'Repaired'; d.resolvedLocation = resolvedLocStr; await window.saveDefective(d); const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'REPAIRED', itemId: d.itemId, itemName: itemName, quantity: d.quantity, notes: `Item repaired and returned to ${resolvedLocStr === 'stock' ? 'Stock' : destLoc}. Notes: ${notes}` }; window.transactions.push(tx); await window.saveTx(tx); }
+                document.getElementById('resolve-defect-form').reset(); window.toggleDefectResLocation();
                 window.closeResolveDefectModal(); window.showToast(`Defect resolution applied.`, 'success'); window.syncAllViews();
             } catch(error) { console.error("Resolve Defect Error:", error); window.showToast("Error processing request.", "error"); }
         };
@@ -715,9 +852,9 @@
                     const d = window.deployments.find(x=>String(x.id)===String(id)); if(!d)continue; const i = window.inventory.find(x=>String(x.id)===String(d.itemId));
                     let q = parseInt(document.getElementById(`process-qty-${id}`).value); if(isNaN(q)||q<=0||q>d.quantity) q=d.quantity;
                     d.quantity -= q; if(d.quantity<=0){ window.deployments = window.deployments.filter(dp=>String(dp.id)!==String(d.id)); await window.deleteDep(d.id); } else { await window.saveDep(d); }
-                    if(action==='return' && i) { i.stock=(Number(i.stock)||0)+q; await window.saveItem(i); await window.saveTx({id:window.generateId(),date:window.getPHDateString(),type:'IN',itemId:i.id,itemName:i.name,quantity:q,notes:`Returned from ${d.location}`}); }
-                    else if(action==='dispose') { await window.saveTx({id:window.generateId(),date:window.getPHDateString(),type:'DISPOSE',itemId:d.itemId,itemName:i?i.name:'-',quantity:q,notes:`Disposed from ${d.location}: ${notes}`}); }
-                    else if(action==='transfer') { let destDep = window.deployments.find(dp => String(dp.itemId) === String(d.itemId) && dp.location === transferLoc); if (destDep) { destDep.quantity = (Number(destDep.quantity)||0) + q; await window.saveDep(destDep); } else { const nd = { id: window.generateId(), itemId: d.itemId, location: transferLoc, quantity: q, date: window.getPHDateString(), notes: notes }; window.deployments.push(nd); await window.saveDep(nd); } if(!window.locations.includes(transferLoc)) { window.locations.push(transferLoc); await window.saveGlobals(); window.populateLocationDatalist(); } await window.saveTx({ id: window.generateId(), date: window.getPHDateString(), type: 'TRANSFER', itemId: d.itemId, itemName: i?i.name:'-', quantity: q, notes: `Transferred from ${d.location} to ${transferLoc}. ${notes}` }); }
+                    if(action==='return' && i) { i.stock=(Number(i.stock)||0)+q; await window.saveItem(i); const tx = {id:window.generateId(),date:window.getPHDateString(),type:'IN',itemId:i.id,itemName:i.name,quantity:q,notes:`Returned from ${d.location}`}; window.transactions.push(tx); await window.saveTx(tx); }
+                    else if(action==='dispose') { const tx = {id:window.generateId(),date:window.getPHDateString(),type:'DISPOSE',itemId:d.itemId,itemName:i?i.name:'-',quantity:q,notes:`Disposed from ${d.location}: ${notes}`}; window.transactions.push(tx); await window.saveTx(tx); }
+                    else if(action==='transfer') { let destDep = window.deployments.find(dp => String(dp.itemId) === String(d.itemId) && dp.location === transferLoc); if (destDep) { destDep.quantity = (Number(destDep.quantity)||0) + q; await window.saveDep(destDep); } else { const nd = { id: window.generateId(), itemId: d.itemId, location: transferLoc, quantity: q, date: window.getPHDateString(), notes: notes }; window.deployments.push(nd); await window.saveDep(nd); } if(!window.locations.includes(transferLoc)) { window.locations.push(transferLoc); await window.saveGlobals(); window.populateLocationDatalist(); } const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'TRANSFER', itemId: d.itemId, itemName: i?i.name:'-', quantity: q, notes: `Transferred from ${d.location} to ${transferLoc}. ${notes}` }; window.transactions.push(tx); await window.saveTx(tx); }
                 }
                 document.getElementById('process-dep-form').reset(); window.closeProcessDepModal(); window.showToast("Success", "success"); window.syncAllViews();
             } catch (error) { console.error(error); window.showToast("Error processing request.", "error"); }
@@ -738,8 +875,10 @@
                     if(!window.locations.includes(dest)){ window.locations.push(dest); await window.saveGlobals(); window.populateLocationDatalist(); }
                     const b = {id:window.generateId(),itemId:d.itemId,fromLocation:d.location,borrower:to,destination:dest,quantity:q,dateBorrowed:window.getPHDateString(),expectedReturnDate:rDate,notes:notes,status:'Active'};
                     window.borrowings.push(b); await window.saveBorrowing(b);
-                    await window.saveTx({id:window.generateId(),date:window.getPHDateString(),type:'BORROW',itemId:d.itemId,itemName:i?i.name:'-',quantity:q,notes:`Lent to ${to} at ${dest}`});
+                    const tx = {id:window.generateId(),date:window.getPHDateString(),type:'BORROW',itemId:d.itemId,itemName:i?i.name:'-',quantity:q,notes:`Lent to ${to} at ${dest}`};
+                    window.transactions.push(tx); await window.saveTx(tx);
                 }
+                document.getElementById('borrow-form').reset();
                 window.closeBorrowModal(); window.showToast("Lent successfully", "success"); window.syncAllViews();
             } catch (error) { console.error(error); window.showToast("Error processing request.", "error"); }
         };
@@ -751,7 +890,8 @@
                 b.status='Returned'; b.dateReturned=window.getPHDateString(); await window.saveBorrowing(b);
                 if(b.destination){ let dDep=window.deployments.find(x=>String(x.itemId)===String(b.itemId)&&x.location===b.destination); if(dDep){ dDep.quantity-=b.quantity; if(dDep.quantity<=0)await window.deleteDep(dDep.id); else await window.saveDep(dDep); } }
                 let fDep = window.deployments.find(x=>String(x.itemId)===String(b.itemId)&&x.location===b.fromLocation); if(fDep){ fDep.quantity+=b.quantity; await window.saveDep(fDep); } else { const nd={id:window.generateId(),itemId:b.itemId,location:b.fromLocation,quantity:b.quantity,date:window.getPHDateString(),notes:"Returned"}; window.deployments.push(nd); await window.saveDep(nd); }
-                await window.saveTx({id:window.generateId(),date:window.getPHDateString(),type:'RETURN_BORROW',itemId:b.itemId,itemName:i?i.name:'-',quantity:b.quantity,notes:`Returned by ${b.borrower}`});
+                const tx = {id:window.generateId(),date:window.getPHDateString(),type:'RETURN_BORROW',itemId:b.itemId,itemName:i?i.name:'-',quantity:b.quantity,notes:`Returned by ${b.borrower}`};
+                window.transactions.push(tx); await window.saveTx(tx);
                 window.showToast("Returned.", "success"); window.syncAllViews();
             } catch (error) { console.error(error); window.showToast("Error processing request.", "error"); }
         };
@@ -766,6 +906,9 @@
                 if(tx.type==='IN') { if(item) { item.stock = (Number(item.stock)||0) - (Number(tx.quantity)||0); await window.saveItem(item); } }
                 else if(tx.type==='OUT') { if(item) { item.stock = (Number(item.stock)||0) + (Number(tx.quantity)||0); await window.saveItem(item); } }
                 else if(tx.type==='DISPOSE') { if(item) { item.stock = (Number(item.stock)||0) + (Number(tx.quantity)||0); await window.saveItem(item); } }
+                else if(['ADD_CATEGORY', 'EDIT_CATEGORY', 'DELETE_CATEGORY', 'ADD_LOCATION', 'EDIT_LOCATION', 'DELETE_LOCATION', 'DELETE_ITEM', 'ADD_ITEM', 'EDIT_ITEM'].includes(tx.type)) {
+                    window.showToast("Cannot automatically undo system/profile modifications. Log removed.", "warning");
+                }
                 
                 window.transactions.splice(idx, 1); await window.deleteTx(txId);
                 window.showToast("Transaction undone.", "success"); window.syncAllViews();
