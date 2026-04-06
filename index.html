@@ -460,8 +460,8 @@
             let depMap = {}; 
             window.locations.forEach(l => { if(l.toLowerCase().includes(search) || search === '') depMap[l] = []; });
             window.deployments.forEach(d => { 
-                const item = window.inventory.find(i=>String(i.id)===String(d.itemId)); const n = item ? String(item.name).toLowerCase() : ''; 
-                if(d.location.toLowerCase().includes(search) || n.includes(search)){ 
+                const item = window.inventory.find(i=>String(i.id)===String(d.itemId)); const n = item ? String(item.name).toLowerCase() : ''; const c = item ? String(item.category).toLowerCase() : '';
+                if(d.location.toLowerCase().includes(search) || n.includes(search) || c.includes(search)){ 
                     if(!depMap[d.location]) depMap[d.location] = []; 
                     if(!depMap[d.location].includes(d)) depMap[d.location].push(d); 
                 } 
@@ -470,26 +470,38 @@
             document.getElementById('deployments-empty').classList.add('hidden');
             let html = '';
             let idx = 0;
-            for(let loc in depMap) {
+            Object.keys(depMap).sort().forEach(loc => {
                 const safeLoc = loc.replace(/</g, "&lt;");
-                let trs = depMap[loc].map(d => { 
-                    const i = window.inventory.find(x=>String(x.id)===String(d.itemId)); 
-                    return `<tr class="border-b border-gray-50 hover:bg-gray-50">
-                        <td class="px-4 py-3"><input type="checkbox" class="dep-checkbox-${idx} w-4 h-4 cursor-pointer" value="${d.id}"></td>
-                        <td class="px-4 py-3 font-bold">${i?i.name:'Deleted'}</td>
-                        <td class="px-4 py-3 font-black text-brand-600">${d.quantity}</td>
-                        <td class="px-4 py-3 text-xs">${window.formatDate(d.date)}</td>
-                        <td class="px-4 py-3 text-right">
-                            <button type="button" onclick="window.openReportDefectModal('${d.itemId}', 'deployed', '${d.id}')" class="text-yellow-600 mr-2 cursor-pointer relative z-10 pointer-events-auto" title="Defect"><i class="ph-bold ph-wrench"></i></button>
-                            <button type="button" onclick="window.openReportMissingModal('${d.itemId}', 'deployed', '${d.id}')" class="text-orange-600 cursor-pointer relative z-10 pointer-events-auto" title="Missing"><i class="ph-bold ph-warning-octagon"></i></button>
-                        </td>
-                    </tr>`; 
-                }).join('');
+                let deps = depMap[loc];
+                let catMap = {};
+                deps.forEach(d => {
+                    const item = window.inventory.find(x => String(x.id) === String(d.itemId));
+                    const cat = item ? item.category : 'Unknown';
+                    if(!catMap[cat]) catMap[cat] = [];
+                    catMap[cat].push({ d, item });
+                });
+                let trs = '';
+                Object.keys(catMap).sort().forEach(cat => {
+                    trs += `<tr class="bg-gray-100/50"><td colspan="5" class="px-4 py-2 text-[10px] font-black text-gray-500 uppercase tracking-widest bg-gray-100">${cat}</td></tr>`;
+                    catMap[cat].sort((a,b) => (a.item ? a.item.name : '').localeCompare(b.item ? b.item.name : '')).forEach(entry => {
+                        const {d, item: i} = entry;
+                        trs += `<tr class="border-b border-gray-50 hover:bg-gray-50">
+                            <td class="px-4 py-3"><input type="checkbox" class="dep-checkbox-${idx} w-4 h-4 cursor-pointer" value="${d.id}"></td>
+                            <td class="px-4 py-3 font-bold">${i?i.name:'Deleted'}</td>
+                            <td class="px-4 py-3 font-black text-brand-600">${d.quantity}</td>
+                            <td class="px-4 py-3 text-xs">${window.formatDate(d.date)}</td>
+                            <td class="px-4 py-3 text-right">
+                                <button type="button" onclick="window.openReportDefectModal('${d.itemId}', 'deployed', '${d.id}')" class="text-yellow-600 mr-2 cursor-pointer relative z-10 pointer-events-auto" title="Defect"><i class="ph-bold ph-wrench"></i></button>
+                                <button type="button" onclick="window.openReportMissingModal('${d.itemId}', 'deployed', '${d.id}')" class="text-orange-600 cursor-pointer relative z-10 pointer-events-auto" title="Missing"><i class="ph-bold ph-warning-octagon"></i></button>
+                            </td>
+                        </tr>`; 
+                    });
+                });
                 if(trs === '') trs = `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400 italic text-xs">No equipment deployed here yet.</td></tr>`;
                 html += `<div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-4 overflow-hidden">
                     <div class="px-6 py-4 bg-brand-50/20 font-black text-brand-900 border-b border-gray-100 flex justify-between items-center">
                         <span>${safeLoc}</span>
-                        <span class="text-xs bg-white px-3 py-1 rounded-full border border-brand-200 shadow-sm">${depMap[loc].reduce((a,b)=>a+(Number(b.quantity)||0),0)} Items</span>
+                        <span class="text-xs bg-white px-3 py-1 rounded-full border border-brand-200 shadow-sm">${deps.reduce((a,b)=>a+(Number(b.quantity)||0),0)} Items</span>
                     </div>
                     <table class="w-full text-left text-sm">
                         <thead class="text-[10px] text-gray-400 uppercase bg-gray-50">
@@ -509,7 +521,8 @@
                     </div>
                 </div>`;
                 idx++;
-            } list.innerHTML = html;
+            });
+            list.innerHTML = html;
         };
 
         window.renderDefectiveItems = () => {
@@ -913,6 +926,92 @@
                 window.transactions.splice(idx, 1); await window.deleteTx(txId);
                 window.showToast("Transaction undone.", "success"); window.syncAllViews();
             } catch(error) { console.error("Undo Error:", error); window.showToast("Error undoing transaction.", "error"); }
+        };
+
+        window.handlePdfSubmit = (e) => {
+            if(e && typeof e.preventDefault === 'function') e.preventDefault();
+            try {
+                window.showToast("Generating PDF, please wait...", "success");
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                let yPos = 20;
+
+                const addTitle = (title) => {
+                    if (yPos > 270) { doc.addPage(); yPos = 20; }
+                    doc.setFontSize(14);
+                    doc.setTextColor(13, 148, 136); // Brand Color
+                    doc.text(title, 14, yPos);
+                    yPos += 8;
+                };
+
+                doc.setFontSize(20);
+                doc.setTextColor(30, 41, 59);
+                doc.text("Equipment Tracker Report", 14, yPos);
+                yPos += 8;
+                doc.setFontSize(10);
+                doc.setTextColor(100, 116, 139);
+                doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, yPos);
+                yPos += 15;
+
+                if(document.getElementById('pdf-opt-inv').checked) {
+                    addTitle("Available Inventory");
+                    const invData = window.inventory.map(i => [i.name, i.category, i.stock]);
+                    if(invData.length > 0) { doc.autoTable({ startY: yPos, head: [['Item Name', 'Category', 'Stock']], body: invData, theme: 'grid' }); yPos = doc.lastAutoTable.finalY + 15; } 
+                    else { doc.setFontSize(10); doc.setTextColor(100); doc.text("No inventory records.", 14, yPos); yPos += 10; }
+                }
+
+                if(document.getElementById('pdf-opt-dep').checked) {
+                    addTitle("Active Deployments");
+                    const enrichedDeps = window.deployments.map(d => {
+                        const item = window.inventory.find(i => String(i.id) === String(d.itemId));
+                        return { location: d.location, category: item ? item.category : 'Unknown', itemName: item ? item.name : 'Deleted', quantity: d.quantity, date: window.formatDate(d.date) };
+                    });
+                    enrichedDeps.sort((a, b) => {
+                        if (a.location !== b.location) return a.location.localeCompare(b.location);
+                        if (a.category !== b.category) return a.category.localeCompare(b.category);
+                        return a.itemName.localeCompare(b.itemName);
+                    });
+                    const depData = enrichedDeps.map(d => [d.location, d.category, d.itemName, d.quantity, d.date]);
+                    if(depData.length > 0) { doc.autoTable({ startY: yPos, head: [['Location', 'Category', 'Item Name', 'Quantity', 'Date Deployed']], body: depData, theme: 'grid' }); yPos = doc.lastAutoTable.finalY + 15; } 
+                    else { doc.setFontSize(10); doc.setTextColor(100); doc.text("No active deployments.", 14, yPos); yPos += 10; }
+                }
+
+                if(document.getElementById('pdf-opt-bor').checked) {
+                    addTitle("Borrowed Items");
+                    const borData = window.borrowings.map(b => { const item = window.inventory.find(i => String(i.id) === String(b.itemId)); return [b.borrower, item ? item.name : 'Unknown', `${b.fromLocation} to ${b.destination}`, b.quantity, b.status]; });
+                    if(borData.length > 0) { doc.autoTable({ startY: yPos, head: [['Borrower', 'Item', 'Route', 'Qty', 'Status']], body: borData, theme: 'grid' }); yPos = doc.lastAutoTable.finalY + 15; } 
+                    else { doc.setFontSize(10); doc.setTextColor(100); doc.text("No borrowed items.", 14, yPos); yPos += 10; }
+                }
+
+                if(document.getElementById('pdf-opt-miss').checked) {
+                    addTitle("Investigations (Missing)");
+                    const missData = window.missingItems.map(m => { const item = window.inventory.find(i => String(i.id) === String(m.itemId)); return [item ? item.name : 'Unknown', m.location || 'Stock', m.quantity, m.status]; });
+                    if(missData.length > 0) { doc.autoTable({ startY: yPos, head: [['Item', 'Location', 'Qty', 'Status']], body: missData, theme: 'grid' }); yPos = doc.lastAutoTable.finalY + 15; } 
+                    else { doc.setFontSize(10); doc.setTextColor(100); doc.text("No missing item reports.", 14, yPos); yPos += 10; }
+                }
+
+                if(document.getElementById('pdf-opt-def').checked) {
+                    addTitle("Defective / Repairs");
+                    const defData = window.defectiveItems.map(d => { const item = window.inventory.find(i => String(i.id) === String(d.itemId)); return [item ? item.name : 'Unknown', d.location || 'Stock', d.quantity, d.status]; });
+                    if(defData.length > 0) { doc.autoTable({ startY: yPos, head: [['Item', 'Location', 'Qty', 'Status']], body: defData, theme: 'grid' }); yPos = doc.lastAutoTable.finalY + 15; } 
+                    else { doc.setFontSize(10); doc.setTextColor(100); doc.text("No defective item reports.", 14, yPos); yPos += 10; }
+                }
+
+                if(document.getElementById('pdf-opt-disp').checked) {
+                    addTitle("Disposed Items");
+                    const dispData = window.transactions.filter(t => t.type === 'DISPOSE').map(t => [t.itemName, t.quantity, window.formatDate(t.date), t.notes || '']);
+                    if(dispData.length > 0) { doc.autoTable({ startY: yPos, head: [['Item', 'Qty', 'Date', 'Notes']], body: dispData, theme: 'grid' }); yPos = doc.lastAutoTable.finalY + 15; } 
+                    else { doc.setFontSize(10); doc.setTextColor(100); doc.text("No disposed items.", 14, yPos); yPos += 10; }
+                }
+
+                doc.save('Equipment_Tracker_Report.pdf');
+                window.closePdfModal();
+                window.showToast("PDF downloaded successfully!", "success");
+
+            } catch (error) {
+                console.error("PDF Generation Error: ", error);
+                window.showToast("Failed to generate PDF.", "error");
+            }
         };
 
         // SETUP & INIT
