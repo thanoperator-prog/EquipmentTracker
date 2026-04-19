@@ -475,59 +475,85 @@
             });
             if(Object.keys(depMap).length === 0){ list.innerHTML = ''; document.getElementById('deployments-empty').classList.remove('hidden'); return; }
             document.getElementById('deployments-empty').classList.add('hidden');
+            
+            // Group the locations by their prefix (first word)
+            let groupedByPrefix = {};
+            Object.keys(depMap).forEach(loc => {
+                let prefix = loc.trim().split(/\s+/)[0] || 'Uncategorized';
+                if (!isNaN(prefix)) prefix = 'General'; // Group numeric-only names
+                if (!groupedByPrefix[prefix]) groupedByPrefix[prefix] = [];
+                groupedByPrefix[prefix].push(loc);
+            });
+
             let html = '';
             let idx = 0;
-            Object.keys(depMap).sort().forEach(loc => {
-                const safeLoc = loc.replace(/</g, "&lt;");
-                let deps = depMap[loc];
-                let catMap = {};
-                deps.forEach(d => {
-                    const item = window.inventory.find(x => String(x.id) === String(d.itemId));
-                    const cat = item ? item.category : 'Unknown';
-                    if(!catMap[cat]) catMap[cat] = [];
-                    catMap[cat].push({ d, item });
-                });
-                let trs = '';
-                Object.keys(catMap).sort().forEach(cat => {
-                    trs += `<tr class="bg-gray-100/50"><td colspan="5" class="px-4 py-2 text-[10px] font-black text-gray-500 uppercase tracking-widest bg-gray-100">${cat}</td></tr>`;
-                    catMap[cat].sort((a,b) => (a.item ? a.item.name : '').localeCompare(b.item ? b.item.name : '')).forEach(entry => {
-                        const {d, item: i} = entry;
-                        trs += `<tr class="border-b border-gray-50 hover:bg-gray-50">
-                            <td class="px-4 py-3"><input type="checkbox" class="dep-checkbox-${idx} w-4 h-4 cursor-pointer" value="${d.id}"></td>
-                            <td class="px-4 py-3 font-bold">${i?i.name:'Deleted'}</td>
-                            <td class="px-4 py-3 font-black text-brand-600">${d.quantity}</td>
-                            <td class="px-4 py-3 text-xs">${window.formatDate(d.date)}</td>
-                            <td class="px-4 py-3 text-right">
-                                <button type="button" onclick="window.openReportDefectModal('${d.itemId}', 'deployed', '${d.id}')" class="text-yellow-600 mr-2 cursor-pointer relative z-10 pointer-events-auto" title="Defect"><i class="ph-bold ph-wrench"></i></button>
-                                <button type="button" onclick="window.openReportMissingModal('${d.itemId}', 'deployed', '${d.id}')" class="text-orange-600 cursor-pointer relative z-10 pointer-events-auto" title="Missing"><i class="ph-bold ph-warning-octagon"></i></button>
-                            </td>
-                        </tr>`; 
+            
+            Object.keys(groupedByPrefix).sort().forEach(groupPrefix => {
+                html += `<div class="mb-6"><h3 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-200 pb-2">${groupPrefix} Locations</h3><div class="space-y-3">`;
+                
+                groupedByPrefix[groupPrefix].sort().forEach(loc => {
+                    const safeLoc = loc.replace(/</g, "&lt;");
+                    let deps = depMap[loc];
+                    let catMap = {};
+                    deps.forEach(d => {
+                        const item = window.inventory.find(x => String(x.id) === String(d.itemId));
+                        const cat = item ? item.category : 'Unknown';
+                        if(!catMap[cat]) catMap[cat] = [];
+                        catMap[cat].push({ d, item });
                     });
+                    let trs = '';
+                    Object.keys(catMap).sort().forEach(cat => {
+                        trs += `<tr class="bg-gray-100/50"><td colspan="5" class="px-4 py-2 text-[10px] font-black text-gray-500 uppercase tracking-widest bg-gray-100">${cat}</td></tr>`;
+                        catMap[cat].sort((a,b) => (a.item ? a.item.name : '').localeCompare(b.item ? b.item.name : '')).forEach(entry => {
+                            const {d, item: i} = entry;
+                            trs += `<tr class="border-b border-gray-50 hover:bg-gray-50">
+                                <td class="px-4 py-3"><input type="checkbox" class="dep-checkbox-${idx} w-4 h-4 cursor-pointer" value="${d.id}"></td>
+                                <td class="px-4 py-3 font-bold">${i?i.name:'Deleted'}</td>
+                                <td class="px-4 py-3 font-black text-brand-600">${d.quantity}</td>
+                                <td class="px-4 py-3 text-xs">${window.formatDate(d.date)}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <button type="button" onclick="window.openReportDefectModal('${d.itemId}', 'deployed', '${d.id}')" class="text-yellow-600 mr-2 cursor-pointer relative z-10 pointer-events-auto" title="Defect"><i class="ph-bold ph-wrench"></i></button>
+                                    <button type="button" onclick="window.openReportMissingModal('${d.itemId}', 'deployed', '${d.id}')" class="text-orange-600 cursor-pointer relative z-10 pointer-events-auto" title="Missing"><i class="ph-bold ph-warning-octagon"></i></button>
+                                </td>
+                            </tr>`; 
+                        });
+                    });
+                    if(trs === '') trs = `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400 italic text-xs">No equipment deployed here yet.</td></tr>`;
+                    
+                    // The Collapsible Accordion Element
+                    html += `
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <button type="button" onclick="const c = document.getElementById('loc-content-${idx}'); c.classList.toggle('hidden'); const i = this.querySelector('.ph-caret-down'); if(i) i.classList.toggle('rotate-180');" class="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 border-b border-gray-100 flex justify-between items-center cursor-pointer transition-colors text-left outline-none focus:ring-2 focus:ring-brand-500 relative z-10 pointer-events-auto">
+                            <div class="flex items-center gap-3 text-brand-900">
+                                <i class="ph-bold ph-caret-down text-gray-400 transition-transform duration-200"></i>
+                                <span class="font-black text-lg tracking-tight">${safeLoc}</span>
+                            </div>
+                            <span class="text-xs bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm font-bold text-brand-600">${deps.reduce((a,b)=>a+(Number(b.quantity)||0),0)} Items</span>
+                        </button>
+                        
+                        <div id="loc-content-${idx}" class="hidden">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-[10px] text-gray-400 uppercase bg-gray-50/50">
+                                    <tr>
+                                        <th class="px-4 py-3 w-10"><input type="checkbox" onchange="window.toggleAllCheckboxes(${idx}, this.checked)" class="w-4 h-4 cursor-pointer" title="Select All"></th>
+                                        <th class="px-4 py-3">Item</th><th class="px-4 py-3">Qty</th><th class="px-4 py-3">Date</th><th class="px-4 py-3 text-right">Flags</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${trs}</tbody>
+                            </table>
+                            <div class="p-4 bg-gray-50 border-t border-gray-100 flex flex-wrap justify-end gap-2">
+                                <button type="button" onclick="window.deployToExistingLocation('${safeLoc}')" class="px-4 py-2 bg-white text-brand-600 border border-brand-200 hover:bg-brand-50 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer relative z-10 pointer-events-auto"><i class="ph-bold ph-plus mr-1"></i> Deploy Here</button>
+                                <button type="button" onclick="window.openProcessDepModal(${idx}, 'transfer')" class="px-4 py-2 bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer relative z-10 pointer-events-auto"><i class="ph-bold ph-arrows-left-right mr-1"></i> Transfer</button>
+                                <button type="button" onclick="window.openBorrowModal(${idx})" class="px-4 py-2 bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer relative z-10 pointer-events-auto"><i class="ph-bold ph-handshake mr-1"></i> Lend</button>
+                                <button type="button" onclick="window.openProcessDepModal(${idx}, 'return')" class="px-4 py-2 bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer relative z-10 pointer-events-auto"><i class="ph-bold ph-arrow-u-down-left mr-1"></i> Return</button>
+                                <button type="button" onclick="window.openProcessDepModal(${idx}, 'dispose')" class="px-4 py-2 bg-white text-red-600 border border-red-200 hover:bg-red-50 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer relative z-10 pointer-events-auto"><i class="ph-bold ph-trash mr-1"></i> Dispose</button>
+                            </div>
+                        </div>
+                    </div>`;
+                    idx++;
                 });
-                if(trs === '') trs = `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400 italic text-xs">No equipment deployed here yet.</td></tr>`;
-                html += `<div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-4 overflow-hidden">
-                    <div class="px-6 py-4 bg-brand-50/20 font-black text-brand-900 border-b border-gray-100 flex justify-between items-center">
-                        <span>${safeLoc}</span>
-                        <span class="text-xs bg-white px-3 py-1 rounded-full border border-brand-200 shadow-sm">${deps.reduce((a,b)=>a+(Number(b.quantity)||0),0)} Items</span>
-                    </div>
-                    <table class="w-full text-left text-sm">
-                        <thead class="text-[10px] text-gray-400 uppercase bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 w-10"><input type="checkbox" onchange="window.toggleAllCheckboxes(${idx}, this.checked)" class="w-4 h-4 cursor-pointer" title="Select All"></th>
-                                <th class="px-4 py-3">Item</th><th class="px-4 py-3">Qty</th><th class="px-4 py-3">Date</th><th class="px-4 py-3 text-right">Flags</th>
-                            </tr>
-                        </thead>
-                        <tbody>${trs}</tbody>
-                    </table>
-                    <div class="p-4 bg-gray-50 border-t border-gray-100 flex flex-wrap justify-end gap-2">
-                        <button type="button" onclick="window.deployToExistingLocation('${safeLoc}')" class="px-4 py-2 bg-white text-brand-600 border border-brand-200 hover:bg-brand-50 rounded-xl text-xs font-bold transition-all shadow-sm"><i class="ph-bold ph-plus mr-1"></i> Deploy Here</button>
-                        <button type="button" onclick="window.openProcessDepModal(${idx}, 'transfer')" class="px-4 py-2 bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 rounded-xl text-xs font-bold transition-all shadow-sm"><i class="ph-bold ph-arrows-left-right mr-1"></i> Transfer</button>
-                        <button type="button" onclick="window.openBorrowModal(${idx})" class="px-4 py-2 bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 rounded-xl text-xs font-bold transition-all shadow-sm"><i class="ph-bold ph-handshake mr-1"></i> Lend</button>
-                        <button type="button" onclick="window.openProcessDepModal(${idx}, 'return')" class="px-4 py-2 bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50 rounded-xl text-xs font-bold transition-all shadow-sm"><i class="ph-bold ph-arrow-u-down-left mr-1"></i> Return</button>
-                        <button type="button" onclick="window.openProcessDepModal(${idx}, 'dispose')" class="px-4 py-2 bg-white text-red-600 border border-red-200 hover:bg-red-50 rounded-xl text-xs font-bold transition-all shadow-sm"><i class="ph-bold ph-trash mr-1"></i> Dispose</button>
-                    </div>
-                </div>`;
-                idx++;
+                
+                html += `</div></div>`;
             });
             list.innerHTML = html;
         };
