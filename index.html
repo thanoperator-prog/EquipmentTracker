@@ -43,7 +43,7 @@
     
     <div id="prompt-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="prompt-content"><div class="p-6"><div class="flex items-center gap-3 mb-4"><div id="prompt-icon-container" class="w-12 h-12 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-2xl"><i id="prompt-icon" class="ph-fill ph-pencil-simple"></i></div><h3 class="text-xl font-bold text-gray-800" id="prompt-title">Prompt Title</h3></div><p id="prompt-message" class="text-gray-500 text-sm mb-4">Please provide input.</p><textarea id="prompt-input" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none resize-none mb-6"></textarea><div class="flex gap-3"><button onclick="window.closePromptModal(false)" class="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Cancel</button><button id="prompt-confirm-btn" onclick="window.closePromptModal(true)" class="flex-1 px-4 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30">Submit</button></div></div></div></div>
     
-    <div id="edit-item-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="edit-modal-content"><div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 class="text-lg font-bold">Edit Equipment</h3><button onclick="window.closeEditItemModal()"><i class="ph ph-x text-xl font-bold text-gray-400 hover:text-gray-700"></i></button></div><form id="edit-item-form" class="p-6" novalidate onsubmit="event.preventDefault();"><input type="hidden" id="edit-item-id"><div class="space-y-4"><div><label class="block text-sm font-bold mb-2">Equipment Name</label><input type="text" id="edit-item-name" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none"></div><div><label class="block text-sm font-bold mb-2">Category</label><select id="edit-item-category" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 bg-white"></select></div><div class="mt-4 pt-4 border-t border-gray-100"><label class="block text-sm font-bold mb-2 text-brand-600"><i class="ph-bold ph-plus-circle"></i> Quick Add Stock / Magdagdag ng Stock (Optional)</label><input type="number" id="edit-add-stock" min="1" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Ilagay ang idadagdag na quantity..."></div></div><div class="mt-8 flex gap-3 items-center"><button type="button" onclick="window.closeEditItemModal(); setTimeout(() => window.promptDeleteItem(document.getElementById('edit-item-id').value), 300)" class="px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl text-sm font-bold transition-all"><i class="ph-bold ph-trash mr-1"></i> Delete</button><div class="flex-1 flex gap-3 justify-end"><button type="button" onclick="window.closeEditItemModal()" class="px-5 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition-all">Cancel</button><button type="button" onclick="window.handleEditItem(event)" class="px-5 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all">Save Changes</button></div></div></form></div></div>
+    <div id="edit-item-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="edit-modal-content"><div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 class="text-lg font-bold">Edit Equipment</h3><button onclick="window.closeEditItemModal()"><i class="ph ph-x text-xl font-bold text-gray-400 hover:text-gray-700"></i></button></div><form id="edit-item-form" class="p-6" novalidate onsubmit="event.preventDefault();"><input type="hidden" id="edit-item-id"><div class="space-y-4"><div><label class="block text-sm font-bold mb-2">Equipment Name</label><input type="text" id="edit-item-name" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none"></div><div><label class="block text-sm font-bold mb-2">Category</label><select id="edit-item-category" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 bg-white"></select></div><div class="mt-4 pt-4 border-t border-gray-100"><label class="block text-sm font-bold mb-2 text-brand-600"><i class="ph-bold ph-plus-circle"></i> Quick Add Stock (Optional)</label><input type="number" id="edit-add-stock" min="1" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Enter quantity to add..."></div></div><div class="mt-8 flex gap-3 items-center"><button type="button" onclick="window.closeEditItemModal(); setTimeout(() => window.promptDeleteItem(document.getElementById('edit-item-id').value), 300)" class="px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl text-sm font-bold transition-all"><i class="ph-bold ph-trash mr-1"></i> Delete</button><div class="flex-1 flex gap-3 justify-end"><button type="button" onclick="window.closeEditItemModal()" class="px-5 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition-all">Cancel</button><button type="button" onclick="window.handleEditItem(event)" class="px-5 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all">Save Changes</button></div></div></form></div></div>
     
     <div id="dispose-stock-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="dispose-modal-content"><div class="px-6 py-5 border-b border-red-100 flex justify-between items-center bg-red-50 text-red-800"><h3 class="text-lg font-bold flex items-center gap-2"><i class="ph-fill ph-trash text-2xl"></i> Dispose Stock</h3><button onclick="window.closeDisposeStockModal()"><i class="ph ph-x text-xl font-bold text-red-400 hover:text-red-700"></i></button></div><form id="dispose-stock-form" class="p-6" novalidate onsubmit="event.preventDefault();"><input type="hidden" id="disp-item-id"><div class="space-y-4"><div class="bg-gray-50 p-4 rounded-xl border border-gray-100"><p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Equipment</p><p class="font-bold text-gray-800 text-lg" id="disp-item-name-display">-</p><p class="text-xs text-gray-500 mt-2">Available: <span class="font-black text-brand-600 text-sm" id="disp-stock-display">0</span></p></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-bold mb-2">Quantity</label><input type="number" id="disp-quantity" min="1" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none" oninput="if(this.max && parseInt(this.value)>parseInt(this.max)) this.value=this.max;"><p id="disp-max-helper" class="text-[10px] font-bold text-gray-400 uppercase mt-1">Max: 0</p></div><div><label class="block text-sm font-bold mb-2">Date</label><input type="date" id="disp-date" class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-red-500 outline-none"></div></div><div><label class="block text-sm font-bold mb-2">Reason</label><textarea id="disp-notes" rows="2" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none focus:ring-2 focus:ring-red-500"></textarea></div></div><div class="mt-8 flex gap-3"><button type="button" onclick="window.closeDisposeStockModal()" class="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Cancel</button><button type="button" onclick="window.handleDisposeStockSubmit(event)" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all">Dispose Items</button></div></form></div></div>
 
@@ -615,7 +615,7 @@
                 return matchesSearch && matchesCat && matchesStatus;
             });
 
-            // Group by category (Pangkatin ayon sa kategorya)
+            // Group by category
             const grouped = {};
             filteredItems.forEach(i => {
                 if(!grouped[i.category]) grouped[i.category] = [];
@@ -625,7 +625,7 @@
             let html = '';
             Object.keys(grouped).sort().forEach(cat => {
                 // Category Header Row
-                html += `<tr class="bg-gray-100/50"><td colspan="5" class="px-6 py-3 text-[10px] font-black text-gray-500 uppercase tracking-widest bg-gray-100 border-y border-gray-200">Kategorya: ${cat}</td></tr>`;
+                html += `<tr class="bg-gray-100/50"><td colspan="5" class="px-6 py-3 text-[10px] font-black text-gray-500 uppercase tracking-widest bg-gray-100 border-y border-gray-200">Category: ${cat}</td></tr>`;
                 
                 // Items under this category
                 grouped[cat].sort((a,b)=>a.name.localeCompare(b.name)).forEach(item => {
@@ -636,16 +636,16 @@
                         <td class="px-6 py-4 font-black text-lg text-gray-900">${item.stock}</td>
                         <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${item.stock >= 5 ? 'bg-brand-50 text-brand-700 border border-brand-100' : 'bg-red-50 text-red-700 border border-red-100'}">${item.stock >= 5 ? 'Stable' : (item.stock > 0 ? 'Critically Low' : 'Out of Stock')}</span></td>
                         <td class="px-6 py-4 text-right flex justify-end gap-2">
-                            <button type="button" onclick="window.openReportDefectModal('${item.id}', 'stock')" class="p-2 text-yellow-600 hover:bg-yellow-50 rounded transition-colors cursor-pointer relative z-10 pointer-events-auto" title="Sira/Defective"><i class="ph-bold ph-wrench"></i></button>
-                            <button type="button" onclick="window.openReportMissingModal('${item.id}', 'stock')" class="p-2 text-orange-600 hover:bg-orange-50 rounded transition-colors cursor-pointer relative z-10 pointer-events-auto" title="Nawawala/Missing"><i class="ph-bold ph-warning-octagon"></i></button>
-                            <button type="button" onclick="window.openDisposeStockModal('${item.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer relative z-10 pointer-events-auto" title="Itapon/Dispose"><i class="ph-bold ph-trash"></i></button>
-                            <button type="button" onclick="window.openEditItemModal('${item.id}')" class="p-2 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors cursor-pointer relative z-10 pointer-events-auto" title="I-edit/Edit"><i class="ph-bold ph-pencil"></i></button>
+                            <button type="button" onclick="window.openReportDefectModal('${item.id}', 'stock')" class="p-2 text-yellow-600 hover:bg-yellow-50 rounded transition-colors cursor-pointer relative z-10 pointer-events-auto" title="Defective"><i class="ph-bold ph-wrench"></i></button>
+                            <button type="button" onclick="window.openReportMissingModal('${item.id}', 'stock')" class="p-2 text-orange-600 hover:bg-orange-50 rounded transition-colors cursor-pointer relative z-10 pointer-events-auto" title="Missing"><i class="ph-bold ph-warning-octagon"></i></button>
+                            <button type="button" onclick="window.openDisposeStockModal('${item.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer relative z-10 pointer-events-auto" title="Dispose"><i class="ph-bold ph-trash"></i></button>
+                            <button type="button" onclick="window.openEditItemModal('${item.id}')" class="p-2 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors cursor-pointer relative z-10 pointer-events-auto" title="Edit"><i class="ph-bold ph-pencil"></i></button>
                         </td>
                     </tr>`;
                 });
             });
 
-            if(html === '') html = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">Walang nahanap na gamit. (No items found)</td></tr>';
+            if(html === '') html = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">No items found.</td></tr>';
             tb.innerHTML = html;
         };
 
@@ -964,22 +964,18 @@
         };
 
         window.undoTransaction = async (txId) => {
-            const confirm = await window.openConfirmModal("I-UNDO itong transaksyon? Babaligtarin nito ang mga pagbabago.");
+            const confirm = await window.openConfirmModal("UNDO this transaction? This will reverse the changes.");
             if(!confirm) return;
             try {
                 const idx = window.transactions.findIndex(t=>String(t.id)===String(txId)); if(idx===-1) return;
                 const tx = window.transactions[idx]; const item = window.inventory.find(i=>String(i.id)===String(tx.itemId));
                 
-                // Kung ang transaksyon ay PAGDAGDAG (IN) sa stock
                 if(tx.type==='IN') { 
                     if(item) { item.stock = (Number(item.stock)||0) - (Number(tx.quantity)||0); await window.saveItem(item); } 
                 }
-                // Kung ang transaksyon ay PAGLABAS (OUT / Deployment)
                 else if(tx.type==='OUT') { 
-                    // Ibalik sa inventory (Add back to inventory)
                     if(item) { item.stock = (Number(item.stock)||0) + (Number(tx.quantity)||0); await window.saveItem(item); } 
                     
-                    // Hanapin ang location para ibawas sa deployment
                     const loc = tx.toLocation || (tx.notes.match(/Deployed to (.*?)\./) ? tx.notes.match(/Deployed to (.*?)\./)[1] : null);
                     if(loc) {
                         let dep = window.deployments.find(d => String(d.itemId) === String(tx.itemId) && d.location === loc);
@@ -994,55 +990,47 @@
                         }
                     }
                 }
-                // Kung ang transaksyon ay PAGTAPON (DISPOSE)
                 else if(tx.type==='DISPOSE') { 
                     const fromDepLoc = tx.fromLocation || (tx.notes.match(/Disposed from (.*?):/) ? tx.notes.match(/Disposed from (.*?):/)[1] : null);
                     if(fromDepLoc) {
-                        // Kung tinapon mula sa deployment, ibalik sa deployment
                         let dep = window.deployments.find(d => String(d.itemId) === String(tx.itemId) && d.location === fromDepLoc);
                         if(dep) {
                             dep.quantity += tx.quantity; await window.saveDep(dep);
                         } else {
-                            const newDep = { id: window.generateId(), itemId: tx.itemId, location: fromDepLoc, quantity: tx.quantity, date: window.getPHDateString(), notes: "Binalik mula sa undo" };
+                            const newDep = { id: window.generateId(), itemId: tx.itemId, location: fromDepLoc, quantity: tx.quantity, date: window.getPHDateString(), notes: "Restored from undo" };
                             window.deployments.push(newDep); await window.saveDep(newDep);
                         }
                     } else {
-                        // Kung tinapon mula sa inventory, ibalik sa inventory
                         if(item) { item.stock = (Number(item.stock)||0) + (Number(tx.quantity)||0); await window.saveItem(item); } 
                     }
                 }
-                // Kung ang transaksyon ay PAGLIPAT (TRANSFER)
                 else if(tx.type === 'TRANSFER') {
                     const fromLoc = tx.fromLocation || (tx.notes.match(/Transferred from (.*?) to/) ? tx.notes.match(/Transferred from (.*?) to/)[1] : null);
                     const toLoc = tx.toLocation || (tx.notes.match(/to (.*?)\./) ? tx.notes.match(/to (.*?)\./)[1] : null);
                     
                     if(fromLoc && toLoc) {
-                        // Ibawas sa pinaglipatan (toLoc)
                         let destDep = window.deployments.find(d => String(d.itemId) === String(tx.itemId) && d.location === toLoc);
                         if(destDep) {
                             destDep.quantity -= tx.quantity;
                             if(destDep.quantity <= 0) { window.deployments = window.deployments.filter(dp => String(dp.id) !== String(destDep.id)); await window.deleteDep(destDep.id); }
                             else { await window.saveDep(destDep); }
                         }
-                        // Ibalik sa pinanggalingan (fromLoc)
                         let sourceDep = window.deployments.find(d => String(d.itemId) === String(tx.itemId) && d.location === fromLoc);
                         if(sourceDep) {
                             sourceDep.quantity += tx.quantity; await window.saveDep(sourceDep);
                         } else {
-                            const newDep = { id: window.generateId(), itemId: tx.itemId, location: fromLoc, quantity: tx.quantity, date: window.getPHDateString(), notes: "Binalik mula sa undo transfer" };
+                            const newDep = { id: window.generateId(), itemId: tx.itemId, location: fromLoc, quantity: tx.quantity, date: window.getPHDateString(), notes: "Restored from undo transfer" };
                             window.deployments.push(newDep); await window.saveDep(newDep);
                         }
                     }
                 }
-                // Ibang system records ay bawal i-undo
                 else if(['ADD_CATEGORY', 'EDIT_CATEGORY', 'DELETE_CATEGORY', 'ADD_LOCATION', 'EDIT_LOCATION', 'DELETE_LOCATION', 'DELETE_ITEM', 'ADD_ITEM', 'EDIT_ITEM'].includes(tx.type)) {
-                    window.showToast("Hindi maaaring i-undo ng kusa ang system/profile modifications. Tinanggal lang sa log.", "warning");
+                    window.showToast("Cannot automatically undo system/profile modifications. Log removed.", "warning");
                 }
                 
-                // Tanggalin ang transaction sa logs
                 window.transactions.splice(idx, 1); await window.deleteTx(txId);
-                window.showToast("Matagumpay na na-undo ang transaksyon.", "success"); window.syncAllViews();
-            } catch(error) { console.error("Undo Error:", error); window.showToast("May error sa pag-undo.", "error"); }
+                window.showToast("Transaction successfully undone.", "success"); window.syncAllViews();
+            } catch(error) { console.error("Undo Error:", error); window.showToast("Error undoing transaction.", "error"); }
         };
 
         window.handlePdfSubmit = (e) => {
