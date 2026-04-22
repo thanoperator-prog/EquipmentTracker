@@ -223,7 +223,7 @@
 
         // INPUT HELPERS
         window.populateItemDatalist = () => { const dl = document.getElementById('inventory-datalist'); if(dl) dl.innerHTML = window.inventory.map(i => `<option value="${i.name}"></option>`).join(''); }
-        window.populateLocationDatalist = () => { const dl = document.getElementById('locations-datalist'); if(dl) dl.innerHTML = window.locations.map(l => `<option value="${l}"></option>`).join(''); }
+        window.populateLocationDatalist = () => { const dl = document.getElementById('locations-datalist'); if(dl) dl.innerHTML = [...window.locations].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })).map(l => `<option value="${l}"></option>`).join(''); }
         window.renderCategoryDropdowns = () => {
             const html = `<option value="All">All Categories</option>` + window.categories.map(c => `<option value="${c}">${c}</option>`).join('');
             const formHtml = `<option value="" disabled selected hidden>Select a Category</option>` + window.categories.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -459,7 +459,7 @@
 
         // RENDER UI FUNCTIONS
         window.renderManageCategories = () => { document.getElementById('category-list').innerHTML = window.categories.map(c => `<li class="py-3 flex justify-between items-center"><span class="font-bold">${c}</span><div class="flex gap-2"><button type="button" onclick="window.promptEditCategory('${c}')" class="text-brand-600 text-xs font-bold cursor-pointer relative z-10 pointer-events-auto">Edit</button><button type="button" onclick="window.promptDeleteCategory('${c}')" class="text-red-600 text-xs font-bold cursor-pointer relative z-10 pointer-events-auto">Delete</button></div></li>`).join(''); };
-        window.renderManageLocations = () => { document.getElementById('location-list').innerHTML = window.locations.map(l => `<li class="py-3 flex justify-between items-center"><span class="font-bold">${l}</span><div class="flex gap-2"><button type="button" onclick="window.promptEditLocation('${l}')" class="text-brand-600 text-xs font-bold cursor-pointer relative z-10 pointer-events-auto">Edit</button><button type="button" onclick="window.promptDeleteLocation('${l}')" class="text-red-600 text-xs font-bold cursor-pointer relative z-10 pointer-events-auto">Delete</button></div></li>`).join(''); };
+        window.renderManageLocations = () => { document.getElementById('location-list').innerHTML = [...window.locations].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })).map(l => `<li class="py-3 flex justify-between items-center"><span class="font-bold">${l}</span><div class="flex gap-2"><button type="button" onclick="window.promptEditLocation('${l}')" class="text-brand-600 text-xs font-bold cursor-pointer relative z-10 pointer-events-auto">Edit</button><button type="button" onclick="window.promptDeleteLocation('${l}')" class="text-red-600 text-xs font-bold cursor-pointer relative z-10 pointer-events-auto">Delete</button></div></li>`).join(''); };
         
         window.renderDeployments = () => {
             const list = document.getElementById('deployments-container'); const el = document.getElementById('search-deployments');
@@ -488,10 +488,10 @@
             let html = '';
             let idx = 0;
             
-            Object.keys(groupedByPrefix).sort().forEach(groupPrefix => {
+            Object.keys(groupedByPrefix).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })).forEach(groupPrefix => {
                 html += `<div class="mb-6"><h3 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-200 pb-2">${groupPrefix} Locations</h3><div class="space-y-3">`;
                 
-                groupedByPrefix[groupPrefix].sort().forEach(loc => {
+                groupedByPrefix[groupPrefix].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })).forEach(loc => {
                     const safeLoc = loc.replace(/</g, "&lt;");
                     let deps = depMap[loc];
                     let catMap = {};
@@ -807,6 +807,25 @@
             try {
                 const n = document.getElementById('new-item-name').value.trim(); const c = document.getElementById('new-item-category').value; const q = parseInt(document.getElementById('new-item-stock').value) || 0;
                 if(!n) return window.showToast("Name required.", "error"); if(!c) return window.showToast("Category required.", "error");
+                
+                let existingItem = window.inventory.find(i => String(i.name).toLowerCase() === n.toLowerCase());
+                if(existingItem) {
+                    const confirmMerge = await window.openConfirmModal(`Ang "${existingItem.name}" ay nasa inventory na. I-merge itong ${q} stock sa kanya?`);
+                    if(!confirmMerge) return;
+                    
+                    existingItem.stock = (Number(existingItem.stock) || 0) + q;
+                    existingItem.category = c; 
+                    await window.saveItem(existingItem);
+                    
+                    if(q > 0) { 
+                        const tx = { id: window.generateId(), date: window.getPHDateString(), type: 'IN', itemId: existingItem.id, itemName: existingItem.name, quantity: q, notes: "Added via New Item merge." }; 
+                        window.transactions.push(tx); await window.saveTx(tx); 
+                    }
+                    document.getElementById('new-item-form').reset();
+                    window.closeModal(); window.showToast("Na-merge sa existing profile.", "success"); window.syncAllViews();
+                    return;
+                }
+                
                 const confirm = await window.openConfirmModal(`Create profile for "${n}"?`); if(!confirm) return;
                 const nid = window.generateId(); const item = { id: nid, name: n, category: c, stock: q };
                 window.inventory.push(item); await window.saveItem(item);
@@ -827,13 +846,41 @@
                 const id = document.getElementById('edit-item-id').value; 
                 const n = document.getElementById('edit-item-name').value.trim(); 
                 const c = document.getElementById('edit-item-category').value;
-                const addStock = parseInt(document.getElementById('edit-add-stock').value);
+                const addStock = parseInt(document.getElementById('edit-add-stock').value) || 0;
 
                 if(!n || !c) return window.showToast("Fill all fields.", "error"); 
                 const item = window.inventory.find(i => String(i.id) === String(id)); 
+                if(!item) return window.closeEditItemModal();
+                
+                const existingMergeTarget = window.inventory.find(i => String(i.name).toLowerCase() === n.toLowerCase() && String(i.id) !== String(id));
+                
+                if(existingMergeTarget) {
+                    const confirmMerge = await window.openConfirmModal(`May equipment na na may pangalang "${existingMergeTarget.name}"! Gusto mo bang i-MERGE (pagsamahin) ito? Ililipat ang stock at lahat ng records dito.`);
+                    if(!confirmMerge) return;
+                    
+                    existingMergeTarget.stock = (Number(existingMergeTarget.stock) || 0) + (Number(item.stock) || 0) + addStock;
+                    existingMergeTarget.category = c; 
+                    await window.saveItem(existingMergeTarget);
+                    
+                    window.deployments.forEach(async d => { if(String(d.itemId) === String(item.id)) { d.itemId = existingMergeTarget.id; await window.saveDep(d); } });
+                    window.defectiveItems.forEach(async d => { if(String(d.itemId) === String(item.id)) { d.itemId = existingMergeTarget.id; await window.saveDefective(d); } });
+                    window.missingItems.forEach(async m => { if(String(m.itemId) === String(item.id)) { m.itemId = existingMergeTarget.id; await window.saveMissing(m); } });
+                    window.borrowings.forEach(async b => { if(String(b.itemId) === String(item.id)) { b.itemId = existingMergeTarget.id; await window.saveBorrowing(b); } });
+                    window.transactions.forEach(async tx => { if(String(tx.itemId) === String(item.id)) { tx.itemId = existingMergeTarget.id; tx.itemName = existingMergeTarget.name; await window.saveTx(tx); } });
+                    
+                    const txM = { id: window.generateId(), date: window.getPHDateString(), type: 'EDIT_ITEM', itemId: existingMergeTarget.id, itemName: existingMergeTarget.name, quantity: (Number(item.stock)||0) + addStock, notes: `Merged duplicate profile. Transferred stock and records.` };
+                    window.transactions.push(txM); await window.saveTx(txM);
+                    
+                    window.inventory = window.inventory.filter(x => String(x.id) !== String(item.id));
+                    await window.deleteItem(item.id);
+                    
+                    document.getElementById('edit-item-form').reset();
+                    window.closeEditItemModal(); window.showToast("Equipment merged successfully.", "success"); window.syncAllViews();
+                    return;
+                }
                 
                 // Kapag walang nagbago sa pangalan o kategorya at walang idadagdag na stock
-                if(!item || (item.name===n && item.category===c && (!addStock || isNaN(addStock)))) return window.closeEditItemModal();
+                if(item.name===n && item.category===c && addStock <= 0) return window.closeEditItemModal();
                 
                 const confirm = await window.openConfirmModal(`Save changes for "${n}"?`); if(!confirm) return;
                 
@@ -845,7 +892,7 @@
                 }
 
                 // Kung mayroong gustong idagdag na quick stock
-                if(addStock && addStock > 0) {
+                if(addStock > 0) {
                     item.stock = (Number(item.stock)||0) + addStock;
                     await window.saveItem(item);
                     const tx2 = { id: window.generateId(), date: window.getPHDateString(), type: 'IN', itemId: item.id, itemName: item.name, quantity: addStock, notes: `Added via Quick Edit` };
