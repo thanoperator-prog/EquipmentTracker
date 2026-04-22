@@ -29,7 +29,7 @@
 
     <script>
         // Fallback Stubs
-        window.stubs = ['syncAllViews', 'navigateTo', 'renderInventory', 'renderDeployments', 'renderBorrowed', 'renderMissingItems', 'renderDefectiveItems', 'renderHistory', 'openManageCategoriesModal', 'closeManageCategoriesModal', 'promptEditCategory', 'promptDeleteCategory', 'openManageLocationsModal', 'closeManageLocationsModal', 'promptEditLocation', 'promptDeleteLocation', 'updateMaxOutgoing', 'updateMaxPullout', 'updateIncCategory', 'closeConfirmModal', 'closePromptModal', 'openEditItemModal', 'closeEditItemModal', 'openModal', 'closeModal', 'openReportMissingModal', 'closeReportMissingModal', 'openResolveMissingModal', 'closeResolveMissingModal', 'openReportDefectModal', 'closeReportDefectModal', 'openResolveDefectModal', 'closeResolveDefectModal', 'toggleDefectResLocation', 'toggleResLocation', 'openBorrowModal', 'closeBorrowModal', 'openProcessDepModal', 'closeProcessDepModal', 'openPdfModal', 'closePdfModal', 'openTxDetails', 'closeViewNoteModal', 'promptDeleteItem', 'toggleAllCheckboxes', 'undoTransaction', 'resolveMissingItem', 'revertMissingItem', 'revertDefectiveItem', 'returnBorrowedItem', 'handleReportMissingSubmit', 'handleResolveMissingSubmit', 'handleReportDefectSubmit', 'handleResolveDefectSubmit', 'handlePdfSubmit', 'handleBorrowSubmit', 'handleProcessDepSubmit', 'handleEditItem', 'handleAddItem', 'handleIncoming', 'handleOutgoing', 'handlePullout', 'deployToExistingLocation', 'handleAddCategory', 'handleAddLocation', 'openDisposeStockModal', 'closeDisposeStockModal', 'handleDisposeStockSubmit', 'populateItemDatalist', 'populateLocationDatalist', 'renderCategoryDropdowns', 'renderDashboard', 'openConfirmModal', 'openPromptModal'];
+        window.stubs = ['syncAllViews', 'navigateTo', 'renderInventory', 'renderDeployments', 'renderBorrowed', 'renderMissingItems', 'renderDefectiveItems', 'renderHistory', 'openManageCategoriesModal', 'closeManageCategoriesModal', 'promptEditCategory', 'promptDeleteCategory', 'openManageLocationsModal', 'closeManageLocationsModal', 'promptEditLocation', 'promptDeleteLocation', 'updateMaxOutgoing', 'updateMaxPullout', 'updateIncCategory', 'closeConfirmModal', 'closePromptModal', 'openEditItemModal', 'closeEditItemModal', 'openModal', 'closeModal', 'openReportMissingModal', 'closeReportMissingModal', 'openResolveMissingModal', 'closeResolveMissingModal', 'openReportDefectModal', 'closeReportDefectModal', 'openResolveDefectModal', 'closeResolveDefectModal', 'toggleDefectResLocation', 'toggleResLocation', 'openBorrowModal', 'closeBorrowModal', 'openProcessDepModal', 'closeProcessDepModal', 'openPdfModal', 'closePdfModal', 'openTxDetails', 'closeViewNoteModal', 'promptDeleteItem', 'toggleAllCheckboxes', 'undoTransaction', 'resolveMissingItem', 'revertMissingItem', 'revertDefectiveItem', 'returnBorrowedItem', 'handleReportMissingSubmit', 'handleResolveMissingSubmit', 'handleReportDefectSubmit', 'handleResolveDefectSubmit', 'handlePdfSubmit', 'handleBorrowSubmit', 'handleProcessDepSubmit', 'handleEditItem', 'handleAddItem', 'handleIncoming', 'handleOutgoing', 'handlePullout', 'deployToExistingLocation', 'handleAddCategory', 'handleAddLocation', 'openDisposeStockModal', 'closeDisposeStockModal', 'handleDisposeStockSubmit', 'populateItemDatalist', 'populateLocationDatalist', 'renderCategoryDropdowns', 'renderDashboard', 'openConfirmModal', 'openPromptModal', 'openFactoryResetModal', 'closeFactoryResetModal', 'handleFactoryReset', 'openRestoreModal', 'closeRestoreModal', 'handleRestore'];
         window.stubs.forEach(name => window[name] = function(e) { if(e && typeof e.preventDefault === 'function') e.preventDefault(); });
     </script>
 </head>
@@ -69,6 +69,10 @@
 
     <div id="view-note-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col custom-scrollbar transform scale-95 transition-transform duration-300" id="view-note-content"><div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-3xl"><h3 class="text-lg font-bold" id="view-note-title"><i class="ph-fill ph-file-text text-brand-600 mr-2"></i> Transaction Details</h3><button onclick="window.closeViewNoteModal()"><i class="ph ph-x text-xl font-bold text-gray-400 hover:text-gray-700"></i></button></div><div class="p-6 overflow-y-auto"><div id="view-note-text" class="text-sm break-words"></div><div class="mt-8 flex justify-end"><button onclick="window.closeViewNoteModal()" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all">Close</button></div></div></div></div>
 
+    <div id="factory-reset-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="factory-reset-content"><div class="px-6 py-5 border-b border-red-100 flex justify-between items-center bg-red-50"><h3 class="text-lg font-bold text-red-800 flex items-center gap-2"><i class="ph-fill ph-warning text-2xl text-red-500"></i> Factory Reset</h3><button onclick="window.closeFactoryResetModal()"><i class="ph ph-x text-xl font-bold text-red-400 hover:text-red-700"></i></button></div><div class="p-6"><p class="text-gray-600 mb-4 text-sm font-bold text-center">WARNING: This will permanently delete ALL data (inventory, logs, locations). This cannot be undone directly without using the recover feature.</p><p class="text-gray-500 mb-2 text-sm text-center">Type <strong>RESET</strong> below to confirm.</p><input type="text" id="factory-reset-input" class="w-full px-4 py-3 border border-red-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 text-center font-bold text-red-600 tracking-widest uppercase" placeholder="RESET" autocomplete="off" oninput="document.getElementById('factory-reset-btn').disabled = this.value !== 'RESET';"><div class="mt-8 flex gap-3"><button type="button" onclick="window.closeFactoryResetModal()" class="flex-1 px-4 py-3 border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-all">Cancel</button><button type="button" onclick="window.handleFactoryReset()" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="factory-reset-btn" disabled>Erase All Data</button></div></div></div></div>
+
+    <div id="restore-modal" class="hidden fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300" id="restore-content"><div class="px-6 py-5 border-b border-emerald-100 flex justify-between items-center bg-emerald-50"><h3 class="text-lg font-bold text-emerald-800 flex items-center gap-2"><i class="ph-fill ph-clock-counter-clockwise text-2xl text-emerald-500"></i> Recover Data</h3><button onclick="window.closeRestoreModal()"><i class="ph ph-x text-xl font-bold text-emerald-400 hover:text-emerald-700"></i></button></div><div class="p-6"><p class="text-gray-600 mb-4 text-sm text-center">Restore your system data from the most recent factory reset backup.</p><div id="restore-info" class="p-4 bg-gray-50 border border-gray-100 rounded-xl text-center mb-6 text-sm">Checking for backups...</div><div class="flex gap-3"><button type="button" onclick="window.closeRestoreModal()" class="flex-1 px-4 py-3 border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-all">Cancel</button><button type="button" onclick="window.handleRestore()" class="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="restore-btn" disabled>Recover Data</button></div></div></div></div>
+
     <!-- Sidebar Menu Panel -->
     <aside class="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-gray-200 shadow-xl z-50 shrink-0 relative">
         <div class="p-6 flex items-center gap-3 text-brand-600 font-black border-b border-gray-100 bg-brand-50/30">
@@ -92,6 +96,10 @@
             <button onclick="window.navigateTo('defective')" id="nav-desktop-defective" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-yellow-50 hover:text-yellow-600 transition-colors"><i class="ph ph-wrench text-xl"></i><span class="font-bold text-sm">Defective / Repair</span></button>
             <button onclick="window.navigateTo('missing')" id="nav-desktop-missing" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition-colors"><i class="ph ph-magnifying-glass text-xl"></i><span class="font-bold text-sm">Investigations</span></button>
             <button onclick="window.navigateTo('history')" id="nav-desktop-history" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-brand-50 hover:text-brand-600 transition-colors"><i class="ph ph-clock-counter-clockwise text-xl"></i><span class="font-bold text-sm">Logs</span></button>
+
+            <div class="px-4 pt-8 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-auto">System</div>
+            <button onclick="window.openRestoreModal()" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-left text-emerald-600 hover:bg-emerald-50 transition-colors"><i class="ph ph-clock-counter-clockwise text-xl"></i><span class="font-bold text-sm">Recover Data</span></button>
+            <button onclick="window.openFactoryResetModal()" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-left text-red-600 hover:bg-red-50 transition-colors"><i class="ph ph-warning text-xl"></i><span class="font-bold text-sm">Factory Reset</span></button>
         </nav>
     </aside>
 
@@ -173,7 +181,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // 1. GLOBALS & STATE INITIALIZATION
         window.inventory = []; window.transactions = []; window.deployments = []; window.missingItems = []; window.defectiveItems = []; window.borrowings = [];
@@ -202,9 +210,9 @@
         window.safeDbCall = async (callback) => {
             if (!window.userId || !window.db) { 
                 window.showToast("Offline Mode Active (Data not synced to cloud)", "warning"); 
-                return; 
+                return null; 
             } 
-            try { await callback(); } catch(e) { console.error("DB Error:", e); window.showToast("Database sync error.", "error"); }
+            try { return await callback(); } catch(e) { console.error("DB Error:", e); window.showToast("Database sync error.", "error"); return null; }
         };
 
         window.saveItem = async (i) => { await window.safeDbCall(() => setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'inventory', String(i.id)), i)); }
@@ -374,6 +382,99 @@
             window.toggleModal('borrow-modal', 'borrow-modal-content', true);
         };
         window.closeBorrowModal = () => window.toggleModal('borrow-modal', 'borrow-modal-content', false);
+
+        window.openFactoryResetModal = () => {
+            const input = document.getElementById('factory-reset-input');
+            if(input) input.value = '';
+            const btn = document.getElementById('factory-reset-btn');
+            if(btn) btn.disabled = true;
+            window.toggleModal('factory-reset-modal', 'factory-reset-content', true);
+        };
+        window.closeFactoryResetModal = () => window.toggleModal('factory-reset-modal', 'factory-reset-content', false);
+        
+        window.handleFactoryReset = async () => {
+            const val = document.getElementById('factory-reset-input').value;
+            if(val !== 'RESET') return window.showToast("Type RESET to confirm.", "error");
+            
+            try {
+                document.getElementById('factory-reset-btn').innerText = 'Erasing...';
+                
+                // BACKUP DATA FIRST BEFORE DELETING
+                const backupData = {
+                    inventory: window.inventory, transactions: window.transactions, deployments: window.deployments, missingItems: window.missingItems, defectiveItems: window.defectiveItems, borrowings: window.borrowings, categories: window.categories, locations: window.locations, timestamp: new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'medium'})
+                };
+                await window.safeDbCall(() => setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'backups', 'latest'), backupData));
+
+                // Delete everything from Firestore sequentially to ensure full deletion
+                for(let i of window.inventory) await window.deleteItem(i.id);
+                for(let t of window.transactions) await window.deleteTx(t.id);
+                for(let d of window.deployments) await window.deleteDep(d.id);
+                for(let m of window.missingItems) await window.deleteMissing(m.id);
+                for(let df of window.defectiveItems) await window.deleteDefective(df.id);
+                for(let b of window.borrowings) await window.deleteBorrowing(b.id);
+                
+                // Reset global locations and categories
+                window.categories = ['Laptops', 'Peripherals', 'Networking', 'Furniture', 'Other'];
+                window.locations = [];
+                await window.saveGlobals();
+                
+                // Clear local arrays
+                window.inventory = []; window.transactions = []; window.deployments = []; window.missingItems = []; window.defectiveItems = []; window.borrowings = [];
+                
+                window.closeFactoryResetModal();
+                document.getElementById('factory-reset-btn').innerText = 'Erase All Data';
+                window.showToast("Factory reset complete. System wiped.", "success");
+                window.navigateTo('dashboard');
+                window.syncAllViews();
+            } catch(e) {
+                console.error("Factory Reset Error:", e);
+                window.showToast("Error wiping data.", "error");
+                document.getElementById('factory-reset-btn').innerText = 'Erase All Data';
+            }
+        };
+
+        window.openRestoreModal = async () => {
+            window.toggleModal('restore-modal', 'restore-content', true);
+            const infoEl = document.getElementById('restore-info');
+            const btn = document.getElementById('restore-btn');
+            infoEl.innerText = "Checking for backups...";
+            btn.disabled = true;
+            btn.innerText = "Recover Data";
+            
+            const snap = await window.safeDbCall(() => getDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'backups', 'latest')));
+            if(snap && snap.exists()) {
+                const d = snap.data();
+                infoEl.innerHTML = `Found backup from:<br><span class="font-black text-emerald-600 text-lg">${d.timestamp || 'Unknown Date'}</span>`;
+                btn.disabled = false;
+            } else {
+                infoEl.innerHTML = `<span class="text-red-500 font-bold">No backup found.</span>`;
+            }
+        };
+        window.closeRestoreModal = () => window.toggleModal('restore-modal', 'restore-content', false);
+
+        window.handleRestore = async () => {
+            document.getElementById('restore-btn').innerText = 'Restoring...';
+            document.getElementById('restore-btn').disabled = true;
+            try {
+                const snap = await window.safeDbCall(() => getDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'backups', 'latest')));
+                if(!snap || !snap.exists()) { window.showToast("No backup found.", "error"); window.closeRestoreModal(); return; }
+                const b = snap.data();
+                
+                for(let i of (b.inventory || [])) await window.saveItem(i);
+                for(let t of (b.transactions || [])) await window.saveTx(t);
+                for(let d of (b.deployments || [])) await window.saveDep(d);
+                for(let m of (b.missingItems || [])) await window.saveMissing(m);
+                for(let df of (b.defectiveItems || [])) await window.saveDefective(df);
+                for(let bw of (b.borrowings || [])) await window.saveBorrowing(bw);
+                
+                window.categories = b.categories || ['Laptops', 'Peripherals', 'Networking', 'Furniture', 'Other'];
+                window.locations = b.locations || [];
+                await window.saveGlobals();
+                
+                window.closeRestoreModal();
+                window.showToast("Data restored successfully!", "success");
+            } catch(e) { console.error("Restore Error:", e); window.showToast("Error restoring data.", "error"); }
+        };
 
         // SYSTEM LOGGING FUNCTIONS FOR CATEGORIES & LOCATIONS
         window.toggleResLocation = () => { const t = document.getElementById('res-dest-type'); const c = document.getElementById('res-loc-container'); if(t && c) c.className = t.value === 'deployed' ? 'block' : 'hidden'; };
